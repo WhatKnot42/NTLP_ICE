@@ -118,7 +118,7 @@ toc
 tic
 
 for ii = 1:Nt
-    sc(  flipud((w_yz(:,:,ii))')  ,[min_w max_w],'cold');
+    sc(flipud((w_yz(:,:,ii))'),[min_w max_w],'cold');
     movie3(ii) = getframe;
 end
  
@@ -135,7 +135,7 @@ toc
 tic
  
 for ii = 1:Nt
-    sc(  flipud((t_xy(:,:,ii))')  ,[min_t max_t],'cold');
+    sc(flipud((t_xy(:,:,ii))'),[min_t max_t],'cold');
     movie4(ii) = getframe;
 end
 
