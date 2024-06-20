@@ -124,7 +124,8 @@ c
          end if
 
          call particle_setup
-         call particle_init 
+         call particle_init
+         call ice_particle_init 
          !call read_part_res !comment out usually 
 
 #ifdef TECIO
