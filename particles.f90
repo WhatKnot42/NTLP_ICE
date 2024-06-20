@@ -1685,6 +1685,337 @@ subroutine particle_exchange
 
 end subroutine particle_exchange
 
+subroutine ice_particle_exchange
+   use pars
+   use con_data
+   use con_stats
+   implicit none
+   include 'mpif.h'
+
+   type(particle), pointer :: tmp
+   integer :: idx,psum,csum
+   integer :: ir,itr,itop,itl,il,ibl,ib,ibr
+   integer :: istatus(mpi_status_size),ierr
+   integer :: status_array(mpi_status_size,16),req(16)
+   type(particle), allocatable :: rbuf_s(:),trbuf_s(:)
+   type(particle), allocatable :: tbuf_s(:),tlbuf_s(:)
+   type(particle), allocatable :: lbuf_s(:),blbuf_s(:)
+   type(particle), allocatable :: bbuf_s(:),brbuf_s(:)
+   type(particle), allocatable :: rbuf_r(:),trbuf_r(:)
+   type(particle), allocatable :: tbuf_r(:),tlbuf_r(:)
+   type(particle), allocatable :: lbuf_r(:),blbuf_r(:)
+   type(particle), allocatable :: bbuf_r(:),brbuf_r(:)
+   type(particle), allocatable :: totalbuf(:)
+   
+   !Zero out the counters for how many particles to send each dir.
+   pr_s=0;ptr_s=0;pt_s=0;ptl_s=0;pl_s=0;pbl_s=0;pb_s=0;pbr_s=0
+   
+   !As soon as the location is updated, must check to see if it left the proc:
+   !May be a better way of doing this, but it seems most reasonable:
+   part => first_ice_particle
+   do while (associated(part))     
+
+      !First get numbers being sent to all sides:
+      if (part%xp(2) .GT. ymax) then 
+         if (part%xp(1) .GT. xmax) then !top right
+            ptr_s = ptr_s + 1
+         elseif (part%xp(1) .LT. xmin) then !bottom right
+            pbr_s = pbr_s + 1
+         else  !right
+            pr_s = pr_s + 1
+         end if
+      elseif (part%xp(2) .LT. ymin) then
+         if (part%xp(1) .GT. xmax) then !top left
+            ptl_s = ptl_s + 1
+         else if (part%xp(1) .LT. xmin) then !bottom left
+            pbl_s = pbl_s + 1
+         else  !left
+            pl_s = pl_s + 1
+         end if
+      elseif ( (part%xp(1) .GT. xmax) .AND. &
+               (part%xp(2) .LT. ymax) .AND. &
+               (part%xp(2) .GT. ymin) ) then !top
+         pt_s = pt_s + 1
+      elseif ( (part%xp(1) .LT. xmin) .AND. &
+               (part%xp(2) .LT. ymax) .AND. &
+               (part%xp(2) .GT. ymin) ) then !bottom
+         pb_s = pb_s + 1
+      end if
+      
+      part => part%next
+   end do
+   
+   !Now allocate the send buffers based on these counts:
+   allocate(rbuf_s(pr_s),trbuf_s(ptr_s),tbuf_s(pt_s),tlbuf_s(ptl_s))
+   allocate(lbuf_s(pl_s),blbuf_s(pbl_s),bbuf_s(pb_s),brbuf_s(pbr_s))
+
+   !Now loop back through the particles and fill the buffers:
+   !NOTE: If it finds one, add it to buffer and REMOVE from list
+   ir=1;itr=1;itop=1;itl=1;il=1;ibl=1;ib=1;ibr=1
+
+   part => first_ice_particle
+   do while (associated(part))
+      
+      if (part%xp(2) .GT. ymax) then 
+         if (part%xp(1) .GT. xmax) then !top right
+            trbuf_s(itr) = part
+            call destroy_ice_particle
+            itr = itr + 1 
+         elseif (part%xp(1) .LT. xmin) then !bottom right
+            brbuf_s(ibr) = part
+            call destroy_ice_particle
+            ibr = ibr + 1
+         else   !right
+            rbuf_s(ir) = part
+            call destroy_ice_particle
+            ir = ir + 1
+         end if
+      elseif (part%xp(2) .LT. ymin) then
+         if (part%xp(1) .GT. xmax) then !top left
+            tlbuf_s(itl) = part
+            call destroy_ice_particle
+            itl = itl + 1
+         else if (part%xp(1) .LT. xmin) then !bottom left
+            blbuf_s(ibl) = part
+            call destroy_ice_particle
+            ibl = ibl + 1
+         else  !left
+            lbuf_s(il) = part
+            call destroy_ice_particle
+            il = il + 1
+         end if
+      elseif ( (part%xp(1) .GT. xmax) .AND. &
+               (part%xp(2) .LT. ymax) .AND. &
+               (part%xp(2) .GT. ymin) ) then !top
+         tbuf_s(itop) = part
+         call destroy_ice_particle
+         itop = itop + 1
+      elseif ( (part%xp(1) .LT. xmin) .AND. &
+               (part%xp(2) .LT. ymax) .AND. &
+               (part%xp(2) .GT. ymin) ) then !bottom
+         bbuf_s(ib) = part
+         call destroy_ice_particle
+         ib = ib + 1 
+      else
+      part => part%next
+      end if 
+      
+   end do
+
+   !Now everyone exchanges the counts with all neighbors:
+   !Left/right:
+   call MPI_Sendrecv(pr_s,1,mpi_integer,rproc,3, &
+          pl_r,1,mpi_integer,lproc,3,mpi_comm_world,istatus,ierr)
+
+   call MPI_Sendrecv(pl_s,1,mpi_integer,lproc,4, &
+          pr_r,1,mpi_integer,rproc,4,mpi_comm_world,istatus,ierr)
+
+   !Top/bottom:
+   call MPI_Sendrecv(pt_s,1,mpi_integer,tproc,5, &
+          pb_r,1,mpi_integer,bproc,5,mpi_comm_world,istatus,ierr)
+
+   call MPI_Sendrecv(pb_s,1,mpi_integer,bproc,6, &
+          pt_r,1,mpi_integer,tproc,6,mpi_comm_world,istatus,ierr)
+
+   !Top right/bottom left:
+   call MPI_Sendrecv(ptr_s,1,mpi_integer,trproc,7, &
+          pbl_r,1,mpi_integer,blproc,7,mpi_comm_world,istatus,ierr)
+
+   call MPI_Sendrecv(pbl_s,1,mpi_integer,blproc,8, &
+          ptr_r,1,mpi_integer,trproc,8,mpi_comm_world,istatus,ierr)
+
+    !Top left/bottom right:
+   call MPI_Sendrecv(ptl_s,1,mpi_integer,tlproc,9, &
+          pbr_r,1,mpi_integer,brproc,9,mpi_comm_world,istatus,ierr)
+
+   call MPI_Sendrecv(pbr_s,1,mpi_integer,brproc,10, &
+           ptl_r,1,mpi_integer,tlproc,10,mpi_comm_world,istatus,ierr)
+
+   !Now everyone has the number of particles arriving from every neighbor
+   !If the count is greater than zero, exchange:
+
+   !Allocate room to receive from each side
+   allocate(rbuf_r(pr_r),trbuf_r(ptr_r),tbuf_r(pt_r),tlbuf_r(ptl_r))
+   allocate(lbuf_r(pl_r),blbuf_r(pbl_r),bbuf_r(pb_r),brbuf_r(pbr_r))
+  
+   !Send to right:
+   if (pr_s .GT. 0) then
+   call mpi_isend(rbuf_s,pr_s,particletype,rproc,11,mpi_comm_world,req(1),ierr)
+   else
+   req(1) = mpi_request_null
+   end if
+
+   !Receive from left:
+   if (pl_r .GT. 0) then
+   call mpi_irecv(lbuf_r,pl_r,particletype,lproc,11,mpi_comm_world,req(2),ierr)
+   else
+   req(2) = mpi_request_null
+   end if
+
+   !Send to left:
+   if (pl_s .GT. 0) then
+   call mpi_isend(lbuf_s,pl_s,particletype,lproc,12,mpi_comm_world,req(3),ierr)
+   else
+   req(3) = mpi_request_null
+   end if
+
+   !Receive from right:
+   if (pr_r .GT. 0) then
+   call mpi_irecv(rbuf_r,pr_r,particletype,rproc,12,mpi_comm_world,req(4),ierr)
+   else
+   req(4) = mpi_request_null
+   end if
+
+   !Send to top:
+   if (pt_s .GT. 0) then
+   call mpi_isend(tbuf_s,pt_s,particletype,tproc,13,mpi_comm_world,req(5),ierr)
+   else
+   req(5) = mpi_request_null
+   end if
+   
+   !Receive from bottom:
+   if (pb_r .GT. 0) then
+   call mpi_irecv(bbuf_r,pb_r,particletype,bproc,13,mpi_comm_world,req(6),ierr)
+   else
+   req(6) = mpi_request_null
+   end if
+
+   !Send to bottom:
+   if (pb_s .GT. 0) then
+   call mpi_isend(bbuf_s,pb_s,particletype,bproc,14,mpi_comm_world,req(7),ierr)
+   else
+   req(7) = mpi_request_null
+   end if
+   
+   !Recieve from top:
+   if (pt_r .GT. 0) then
+   call mpi_irecv(tbuf_r,pt_r,particletype,tproc,14,mpi_comm_world,req(8),ierr)
+   else
+   req(8) = mpi_request_null
+   end if
+
+   !Send to top right:
+   if (ptr_s .GT. 0) then
+   call mpi_isend(trbuf_s,ptr_s,particletype,trproc,15,mpi_comm_world,req(9),ierr)
+   else
+   req(9) = mpi_request_null
+   end if
+  
+   !Receive from bottom left:
+   if (pbl_r .GT. 0) then
+   call mpi_irecv(blbuf_r,pbl_r,particletype,blproc,15,mpi_comm_world,req(10),ierr)
+   else 
+   req(10) = mpi_request_null
+   end if
+ 
+   !Send to bottom left:
+   if (pbl_s .GT. 0) then
+   call mpi_isend(blbuf_s,pbl_s,particletype,blproc,16,mpi_comm_world,req(11),ierr)
+   else
+   req(11) = mpi_request_null
+   end if
+  
+   !Receive from top right:
+   if (ptr_r .GT. 0) then
+   call mpi_irecv(trbuf_r,ptr_r,particletype,trproc,16,mpi_comm_world,req(12),ierr)
+   else 
+   req(12) = mpi_request_null
+   end if
+
+   !Send to top left:
+   if (ptl_s .GT. 0) then
+   call mpi_isend(tlbuf_s,ptl_s,particletype,tlproc,17,mpi_comm_world,req(13),ierr)
+   else 
+   req(13) = mpi_request_null
+   end if
+ 
+   !Receive from bottom right:
+   if (pbr_r .GT. 0) then
+   call mpi_irecv(brbuf_r,pbr_r,particletype,brproc,17,mpi_comm_world,req(14),ierr)
+   else 
+   req(14) = mpi_request_null
+   end if
+
+   !Send to bottom right:
+   if (pbr_s .GT. 0) then
+   call mpi_isend(brbuf_s,pbr_s,particletype,brproc,18,mpi_comm_world,req(15),ierr)
+   else
+   req(15) = mpi_request_null
+   end if
+
+   !Receive from top left:
+   if (ptl_r .GT. 0) then
+   call mpi_irecv(tlbuf_r,ptl_r,particletype,tlproc,18,mpi_comm_world,req(16),ierr)
+   else
+   req(16) = mpi_request_null
+   end if
+
+   call mpi_waitall(16,req,status_array,ierr)
+
+   !Now add incoming particles to linked list:
+   !NOTE: add them to beginning since it's easiest to access (first_particle)
+
+   !Form one large buffer to loop through and add:
+   psum = pr_r+ptr_r+pt_r+ptl_r+pl_r+pbl_r+pb_r+pbr_r
+   csum = 0
+   allocate(totalbuf(psum))
+   if (pr_r .GT. 0) then 
+      totalbuf(1:pr_r) = rbuf_r(1:pr_r)
+      csum = csum + pr_r 
+   end if
+   if (ptr_r .GT. 0) then 
+      totalbuf(csum+1:csum+ptr_r) = trbuf_r(1:ptr_r)
+      csum = csum + ptr_r
+   end if
+   if (pt_r .GT. 0) then 
+      totalbuf(csum+1:csum+pt_r) = tbuf_r(1:pt_r)
+      csum = csum + pt_r
+   end if
+   if (ptl_r .GT. 0) then 
+      totalbuf(csum+1:csum+ptl_r) = tlbuf_r(1:ptl_r)
+      csum = csum + ptl_r
+   end if
+   if (pl_r .GT. 0) then 
+      totalbuf(csum+1:csum+pl_r) = lbuf_r(1:pl_r)
+      csum = csum + pl_r
+   end if
+   if (pbl_r .GT. 0) then 
+      totalbuf(csum+1:csum+pbl_r) = blbuf_r(1:pbl_r)
+      csum = csum + pbl_r
+   end if
+   if (pb_r .GT. 0) then 
+      totalbuf(csum+1:csum+pb_r) = bbuf_r(1:pb_r)
+      csum = csum + pb_r
+   end if
+   if (pbr_r .GT. 0) then 
+      totalbuf(csum+1:csum+pbr_r) = brbuf_r(1:pbr_r)
+      csum = csum + pbr_r
+   end if
+
+   do idx = 1,psum
+     if (.NOT. associated(first_ice_particle)) then
+        allocate(first_ice_particle)
+        first_ice_particle = totalbuf(idx)
+        nullify(first_ice_particle%next,first_ice_particle%prev)
+     else
+        allocate(first_ice_particle%prev)
+        tmp => first_ice_particle%prev
+        tmp = totalbuf(idx)
+        tmp%next => first_ice_particle
+        nullify(tmp%prev)
+        first_ice_particle => tmp
+        nullify(tmp)
+     end if
+   end do  
+   
+   deallocate(rbuf_s,trbuf_s,tbuf_s,tlbuf_s)
+   deallocate(lbuf_s,blbuf_s,bbuf_s,brbuf_s)
+   deallocate(rbuf_r,trbuf_r,tbuf_r,tlbuf_r)
+   deallocate(lbuf_r,blbuf_r,bbuf_r,brbuf_r)
+   deallocate(totalbuf)
+
+end subroutine ice_particle_exchange
+
 subroutine set_bounds  
         use pars
         use con_data
@@ -1747,6 +2078,52 @@ subroutine particle_init
 
 
 end subroutine particle_init
+
+subroutine ice_particle_init
+   use pars
+   use con_data
+   implicit none
+   include 'mpif.h' 
+   integer :: values(8)
+   integer :: idx,ierr
+
+   !Create the seed for the random number generator:
+   call date_and_time(VALUES=values)
+   iseed = -(myid+values(8)+values(7)+values(6))
+
+
+   numpart = tnumpart/numprocs
+   if (myid == 0) then
+   numpart = numpart + MOD(tnumpart,numprocs)
+   endif
+
+
+   !Initialize ngidx, the particle global index for this processor
+   ngidx = 1
+
+   !Initialize the linked list of particles:
+   nullify(part,first_particle)
+   
+
+   do idx=1,numpart
+
+      ! Call new_particle, which creates a new particle basd on some strategy dictated by inewpart
+      call new_ice_particle(idx,myid)
+
+
+   ngidx = ngidx + 1
+   end do
+
+
+   partTsrc = 0.0
+   partTsrc_t = 0.0
+   partHsrc = 0.0
+   partHsrc_t = 0.0
+   partTEsrc = 0.0
+   partTEsrc_t = 0.0
+
+
+end subroutine ice_particle_init
 
 subroutine particle_setup
 
@@ -2070,7 +2447,7 @@ subroutine particle_reintro
       include 'mpif.h'
 
       integer :: it_delay
-      integer :: ierr,randproc,np,my_reintro
+      integer :: ierr,randproc,np,my_reintro,my_reintro_ice
       real :: totdrops,t_reint
 
 
@@ -2088,6 +2465,7 @@ subroutine particle_reintro
          if (mod(it,it_delay)==0) then
 
             my_reintro = nprime*(1./60.)*(10.**6.)*dt*4/numprocs*real(it_delay) !4m^3 (vol chamber)
+            my_reintro_ice = nprimeice*(1./60.)*(10.**6.)*dt*4/numprocs*real(it_delay) !4m^3 (vol chamber)
             tot_reintro = my_reintro*numprocs
 
             if (myid==0) write(*,*) 'time,tot_reintro:',time,tot_reintro
@@ -2095,6 +2473,7 @@ subroutine particle_reintro
             do np=1,my_reintro
 
                call new_particle(np,myid)
+               call new_ice_particle(np,myid)
 
                !Update this processor's global ID for each one created:
                ngidx = ngidx + 1
@@ -2814,6 +3193,27 @@ subroutine particle_bcs_periodic
       !Also maintain the number of particles on each proc
       
       part => first_particle
+      do while (associated(part))
+
+      !x,y periodic
+   
+      if (part%xp(1) .GT. xl) then
+         part%xp(1) = part%xp(1)-xl
+      elseif (part%xp(1) .LT. 0) then
+         part%xp(1) = xl + part%xp(1)
+      end if
+
+      if (part%xp(2) .GT. yl) then
+         part%xp(2) = part%xp(2)-yl
+      elseif (part%xp(2) .LT. 0) then
+         part%xp(2) = yl + part%xp(2)
+      end if
+
+      part => part%next
+
+      end do
+
+      part => first_ice_particle
       do while (associated(part))
 
       !x,y periodic
@@ -4117,6 +4517,34 @@ subroutine destroy_particle
       end if
    
 end subroutine destroy_particle
+
+subroutine destroy_ice_particle
+   implicit none
+
+   type(particle), pointer :: tmp
+
+   !Is it the first and last in the list?
+   if (associated(part,first_ice_particle) .AND. (.NOT. associated(part%next)) ) then
+       nullify(first_particle)
+       deallocate(part)
+   else
+     if (associated(part,first_ice_particle)) then !Is it the first particle?
+        first_particle => part%next
+        part => first_particle
+        deallocate(part%prev)
+     elseif (.NOT. associated(part%next)) then !Is it the last particle?
+        nullify(part%prev%next)
+        deallocate(part)
+     else
+        tmp => part
+        part => part%next
+        tmp%prev%next => tmp%next
+        tmp%next%prev => tmp%prev
+        deallocate(tmp)
+     end if
+   end if
+
+end subroutine destroy_ice_particle
 
 subroutine particle_stats
       use pars
