@@ -3232,7 +3232,7 @@ subroutine particle_update_BE
         diff(1:3) = part%vp - part%uf
         diffnorm = sqrt(diff(1)**2 + diff(2)**2 + diff(3)**2)
         Volp = pi2*2.0/3.0*part%radius**3
-        rhop = (part%m_s+Volp*rhow)/Volp
+        rhop = 916.8
         taup_i = 18.0*rhoa*nuf/rhop/(2.0*part%radius)**2
         Rep = 2.0*part%radius*diffnorm/nuf
         corrfac = (1.0 + 0.15*Rep**(0.687))
@@ -3275,7 +3275,7 @@ subroutine particle_update_BE
                 rt_start(2) = 1.0
                end if
 
-               call gauss_newton_2d(part%vp,dt_taup0,rhoa,rt_start, rt_zeroes,flag)
+               call gauss_newton_2d(part%vp,dt_taup0,rhoa,rt_start,rt_zeroes,flag)
 
                if (flag==1) then
                num100 = num100+1
@@ -3431,7 +3431,7 @@ subroutine particle_update_BE
       part => part%next
       end do
       call end_phase(measurement_id_particle_loop)
-	!ICE STUFF HERE
+	
 
       !Enforce nonperiodic bcs (either elastic or destroying particles)
       call start_phase(measurement_id_particle_bcs)
