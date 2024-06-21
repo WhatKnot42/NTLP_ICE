@@ -125,10 +125,10 @@ Sal = 0.066  !INITIAL salinity in kg/kg
 Gam = 7.28e-2
 Ion = 2.0
 
-nprime = 0.005  !particles/cm^3/min, real rate is nprime*multiplicity
+nprime = 0.01  !particles/cm^3/min, real rate is nprime*multiplicity
 
 !Particle initial conditions:
-radius_init = 2.0e-7
+radius_init = 2.0e-6
 radius_std = 0.0
 kappas_init = 1.2
 kappas_std = 0.0
