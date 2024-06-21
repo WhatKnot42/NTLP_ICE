@@ -1177,7 +1177,7 @@ subroutine particle_coupling_update
      else
         rhoa = surf_rho
      end if
-     rhop = (part%m_s+pi2*2.0/3.0*part%radius**3*rhow)/(pi2*2.0/3.0*part%radius**3)
+     rhop = 916.8
      partmass = rhop*2.0/3.0*pi2*(part%radius)**3
      taup_i = 18.0*rhoa*nuf/rhop/(2.0*part%radius)**2 
 
@@ -2836,7 +2836,7 @@ subroutine particle_update_rk3(istage)
          diffnorm = sqrt(diff(1)**2 + diff(2)**2 + diff(3)**2)
          Rep = 2.0*part%radius*diffnorm/nuf  
          Volp = pi2*2.0/3.0*part%radius**3
-         rhop = (part%m_s+Volp*rhow)/Volp
+         rhop = 916.8
          taup_i = 18.0*rhoa*nuf/rhop/(2.0*part%radius)**2 
 
          myRep_avg = myRep_avg + Rep
@@ -3344,7 +3344,7 @@ subroutine particle_update_BE
 
          !New volume and particle density
          Volp = pi2*2.0/3.0*part%radius**3
-         rhop = (part%m_s+Volp*rhow)/Volp
+         rhop = 916.8
 
          !Intermediate Values
          diff(1:3) = part%vp - part%uf
@@ -3793,7 +3793,7 @@ subroutine particle_stats
 
       pi   = 4.0*atan(1.0)
 
-      rhop = (part%m_s+4.0/3.0*pi*part%radius**3*rhow)/(4.0/3.0*pi*part%radius**3)
+      rhop = 916.8
 
       !Takes in ipt,jpt,kpt as the node to the "bottom left" of the particle
       !(i.e. the node in the negative direction for x,y,z)
@@ -4637,7 +4637,7 @@ subroutine SFS_velocity
    !     ---------------------------------        
 
     Volp = pi2*2.0/3.0*part%radius**3
-    rhop = (part%m_s+Volp*rhow)/Volp
+    rhop = 916.8
 
     !Store the particle flux now that we have the new position
     if (part%xp(3) .gt. zl) then   !This will get treated in particle_bcs_nonperiodic, but record here
