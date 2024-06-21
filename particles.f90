@@ -2197,7 +2197,8 @@ subroutine new_particle(idx,procidx)
       zv = ran2(iseed)*zl
       xp_init = (/xv,yv,zv/) 
 
-      m_s = radius_init**3*pi2*2.0/3.0*rhow*Sal  !Using the salinity specified in params.in
+      !m_s = radius_init**3*pi2*2.0/3.0*rhow*Sal  !Using the salinity specified in params.in
+      m_s = 0 !ice is not saline
 
       call create_particle(xp_init,vp_init,Tp_init,m_s,kappas_init,mult_init,radius_init,ngidx,procidx)
 
@@ -2219,7 +2220,9 @@ subroutine new_particle(idx,procidx)
       ! Set distribution for kappa_s
       kappas_dinit = abs(kappas_std * sqrt(-2*log(ran2(iseed)))*cos(pi2*ran2(iseed)) + kappas_init)
 
-      m_s = radius_dinit**3*pi2*2.0/3.0*rhow*Sal  !Using the salinity specified in params.in
+      !m_s = radius_dinit**3*pi2*2.0/3.0*rhow*Sal  !Using the salinity specified in params.in
+
+      m_s = 0 !ice is not saline
 
       call create_particle(xp_init,vp_init,Tp_init,m_s,kappas_dinit,mult_init,radius_dinit,ngidx,procidx)
 
