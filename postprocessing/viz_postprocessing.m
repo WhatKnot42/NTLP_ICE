@@ -1,13 +1,14 @@
-tic
-clear; clc; close all;
-%% Setup
+clear
+clc
+close all
+%%
 
-% The "viz file" contains slices of velocities and scalars
-% The frequency that this is written out is governed by the "i_viz" paramater in params.in
-% To see the contents of the file within Matlab, use the "ncdisp" command
-% By default the slices are at the midplanes in each direction; to change, see the subroutine "write_viz_netcdf"
+%The "viz file" contains slices of velocities and scalars
+%The frequency that this is written out is governed by the "i_viz" paramater in params.in
+%To see the contents of the file within Matlab, use the "ncdisp" command
+%By default the slices are at the midplanes in each direction; to change, see the subroutine "write_viz_netcdf"
 
-% "viz.nc" is a netCDF file which can be read using standard packages
+%"viz.nc" is a netCDF file which can be read using standard packages
 
 % I modified this script to save each of the animations at 32 frames per second as an mp4 file in the folder that the .m file is run in. To change
 % the framerate of all animations (and therefore the length as the number of frames is constant) change the variable called "fps" just below. To
@@ -23,7 +24,6 @@ fps = 32;
 fname = './viz.nc';
 
 cmap = colormap("turbo"); % This makes the matlab native plots have more contrast
-
 
 %% Animate an xy-slice of potential temperature
 tic
@@ -59,7 +59,7 @@ for i=1:Nt
     movie1(i) = getframe(fig);
 end
 
-vidfile = VideoWriter('XY Slice of Potential Temperature 32fps','MPEG-4');
+vidfile = VideoWriter('XY Slice of Potential Temperature Cold 32fps','MPEG-4');
 vidfile.FrameRate = fps;
 
 open(vidfile)
@@ -95,7 +95,7 @@ for i=1:Nt
     movie2(i) = getframe(fig2);
 end
 
-vidfile = VideoWriter('YZ Slice of Vertical Velocity 32fps','MPEG-4');
+vidfile = VideoWriter('YZ Slice of Vertical Velocity Cold 32fps','MPEG-4');
 vidfile.FrameRate = fps;
 
 open(vidfile)
@@ -110,44 +110,40 @@ toc
 % the following two animations will be pixelated and square, but will
 % animate much faster. To use this part of the script, the add on titled
 % "SC - powerful image rendering" must be installed. After install,
-% uncomment the code below and run the sections. If uncommented wtihout 
-% the add-on installed, this part of the script will throw an error.
+% uncomment the code below and run the sections
+%
 % - Ben Roper 2024
 
-%% Quick render of w_yz
-tic
-
-for ii = 1:Nt
-    sc(flipud((w_yz(:,:,ii))'),[min_w max_w],'cold');
-    movie3(ii) = getframe;
-end
- 
-vidfile = VideoWriter('YZ_W 32 fps','MPEG-4');
-vidfile.FrameRate = fps;
-
-open(vidfile)
-writeVideo(vidfile,movie3)
-close(vidfile)
-close all
- 
-toc
 %% Quick render of t_xy
-tic
- 
-for ii = 1:Nt
-    sc(flipud((t_xy(:,:,ii))'),[min_t max_t],'cold');
-    movie4(ii) = getframe;
-end
+% tic
+% 
+% for ii = 1:Nt
+%     sc(flipud((t_xy(:,:,ii))'),[min_t max_t],'cold');
+%     movie4(ii) = getframe;
+% end
+% 
+% vidfile = VideoWriter('XY_T Cold 32 fps','MPEG-4');
+% vidfile.FrameRate = fps;
+% 
+% open(vidfile)
+% writeVideo(vidfile,movie4)
+% close(vidfile)
+% close all
+% toc
 
-vidfile = VideoWriter('XY_T 32 fps','MPEG-4');
-vidfile.FrameRate = fps;
-
-open(vidfile)
-writeVideo(vidfile,movie4)
-close(vidfile)
-close all
-
-toc
-
-%%
-toc
+%% Quick render of w_yz
+% tic
+% 
+% for ii = 1:Nt
+%     sc(  flipud((w_yz(:,:,ii))')  ,[min_w max_w],'cold');
+%     movie3(ii) = getframe;
+% end
+% 
+% vidfile = VideoWriter('YZ_W Cold 32 fps','MPEG-4');
+% vidfile.FrameRate = fps;
+% 
+% open(vidfile)
+% writeVideo(vidfile,movie3)
+% close(vidfile)
+% close all
+% toc
