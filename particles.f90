@@ -88,7 +88,7 @@ module particles
   end type particle
 
   type(particle), pointer :: part,first_particle
-  !type(particle), pointer :: icepart,first_ice_particle
+  type(particle), pointer :: icepart,first_ice_particle
 
 CONTAINS
 
@@ -1177,7 +1177,7 @@ subroutine particle_coupling_update
      else
         rhoa = surf_rho
      end if
-     rhop = 916.8
+     rhop = (part%m_s+pi2*2.0/3.0*part%radius**3*rhow)/(pi2*2.0/3.0*part%radius**3)
      partmass = rhop*2.0/3.0*pi2*(part%radius)**3
      taup_i = 18.0*rhoa*nuf/rhop/(2.0*part%radius)**2 
 
@@ -2198,7 +2198,6 @@ subroutine new_particle(idx,procidx)
       xp_init = (/xv,yv,zv/) 
 
       m_s = radius_init**3*pi2*2.0/3.0*rhow*Sal  !Using the salinity specified in params.in
-      !m_s = 0 !ice is not saline
 
       call create_particle(xp_init,vp_init,Tp_init,m_s,kappas_init,mult_init,radius_init,ngidx,procidx)
 
@@ -2221,8 +2220,6 @@ subroutine new_particle(idx,procidx)
       kappas_dinit = abs(kappas_std * sqrt(-2*log(ran2(iseed)))*cos(pi2*ran2(iseed)) + kappas_init)
 
       m_s = radius_dinit**3*pi2*2.0/3.0*rhow*Sal  !Using the salinity specified in params.in
-
-      !m_s = 0 !ice is not saline
 
       call create_particle(xp_init,vp_init,Tp_init,m_s,kappas_dinit,mult_init,radius_dinit,ngidx,procidx)
 
@@ -2836,7 +2833,7 @@ subroutine particle_update_rk3(istage)
          diffnorm = sqrt(diff(1)**2 + diff(2)**2 + diff(3)**2)
          Rep = 2.0*part%radius*diffnorm/nuf  
          Volp = pi2*2.0/3.0*part%radius**3
-         rhop = 916.8
+         rhop = (part%m_s+Volp*rhow)/Volp
          taup_i = 18.0*rhoa*nuf/rhop/(2.0*part%radius)**2 
 
          myRep_avg = myRep_avg + Rep
@@ -3232,7 +3229,7 @@ subroutine particle_update_BE
         diff(1:3) = part%vp - part%uf
         diffnorm = sqrt(diff(1)**2 + diff(2)**2 + diff(3)**2)
         Volp = pi2*2.0/3.0*part%radius**3
-        rhop = 916.8
+        rhop = (part%m_s+Volp*rhow)/Volp
         taup_i = 18.0*rhoa*nuf/rhop/(2.0*part%radius)**2
         Rep = 2.0*part%radius*diffnorm/nuf
         corrfac = (1.0 + 0.15*Rep**(0.687))
@@ -3275,7 +3272,7 @@ subroutine particle_update_BE
                 rt_start(2) = 1.0
                end if
 
-               call gauss_newton_2d(part%vp,dt_taup0,rhoa,rt_start,rt_zeroes,flag)
+               call gauss_newton_2d(part%vp,dt_taup0,rhoa,rt_start, rt_zeroes,flag)
 
                if (flag==1) then
                num100 = num100+1
@@ -3344,7 +3341,7 @@ subroutine particle_update_BE
 
          !New volume and particle density
          Volp = pi2*2.0/3.0*part%radius**3
-         rhop = 916.8
+         rhop = (part%m_s+Volp*rhow)/Volp
 
          !Intermediate Values
          diff(1:3) = part%vp - part%uf
@@ -3431,7 +3428,7 @@ subroutine particle_update_BE
       part => part%next
       end do
       call end_phase(measurement_id_particle_loop)
-	
+	!ICE HERE?
 
       !Enforce nonperiodic bcs (either elastic or destroying particles)
       call start_phase(measurement_id_particle_bcs)
@@ -3626,7 +3623,7 @@ subroutine particle_update_BE
       do while (associated(part))
       numpart = numpart + 1
       
-      if (part%radius .gt. 3.5e-6) then
+      if (part%radius .gt. part%rc) then
          myradavg = myradavg + part%radius
          myradmsqr = myradmsqr + part%radius**2
       end if
@@ -3638,7 +3635,7 @@ subroutine particle_update_BE
         numdrop_center = numdrop_center + 1
      end if
 
-      if (part%radius .gt. 3.5e-6) then
+      if (part%radius .gt. part%rc) then
          numdrop = numdrop + 1
       else
          numaerosol = numaerosol + 1
@@ -3793,7 +3790,7 @@ subroutine particle_stats
 
       pi   = 4.0*atan(1.0)
 
-      rhop = 916.8
+      rhop = (part%m_s+4.0/3.0*pi*part%radius**3*rhow)/(4.0/3.0*pi*part%radius**3)
 
       !Takes in ipt,jpt,kpt as the node to the "bottom left" of the particle
       !(i.e. the node in the negative direction for x,y,z)
@@ -4341,7 +4338,7 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
    real, intent(in) :: rhoa,vnext(3),tempr,tempt,h
    real, intent(out) :: v_output(3),rT_output(2)
 
-   real :: esa,esi,dnext,m_w,rhop,Rep,taup,vprime(3),rprime,Tprime,qstr,Shp,Nup,dp,VolP,Si,Dprime,Kprime
+   real :: esa,dnext,m_w,rhop,Rep,taup,vprime(3),rprime,Tprime,qstr,Shp,Nup,dp,VolP,esi,Si,Dprime,Kprime
    real :: diff(3),diffnorm,Tnext,rnext,T
    real :: taup0,g(3)
    real :: mod_magnus,mod_ice
@@ -4379,21 +4376,21 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
      !!!!!!!!!!!!!!!!!!
 
      !!! Radius !!!
-     !Dprime = ((0.015*Tnext)-1.9)*(1e-5)
-     !Kprime = ((1.5e-11)*(Tnext**3)) - ((4.8e-8)*(Tnext**2)) + ((1e-4)*Tnext) - (3.9e-4)
+     Dprime = ((0.015*Tnext)-1.9)*(1e-5)
+     Kprime = ((1.5e-11)*(Tnext**3)) - ((4.8e-8)*(Tnext**2)) + ((1e-4)*Tnext) - (3.9e-4)
 
      Shp = 2. + 0.6 * Rep**(1./2.) * Sc**(1./3.)
 
-     !rprime = (3.*(Si-1))/(916.8*rnext*(((((2.838e6)/(467.0*Tnext))-1)*((2.838e6)/(Kprime*Tnext)))+(467.0/(esi*Dprime)))) !ICE
-     rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr) 
+     rprime = (3.*(Si-1))/(rhop*rnext*(((((2.838e6)/(467.0*Tnext))-1)*((2.838e6)/(Kprime*Tnext)))+(467.0/(esi*Dprime)))) !ICE
+     !rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr) 
      rprime = rprime * (taup0/part%radius)
      !!!!!!!!!!!!!!!!!
 
      !!! Temperature !!!
      Nup = 2. + 0.6*Rep**(1./2.)*Pra**(1./3.);
 
-     !Tprime = (((-3.0*Nup*Cpa*nuf*rhoa)/(2.*Pra*2108.0*916.8*(rnext**2)))*(Tnext-part%Tf)) + (3.0*2108.0*(1.0/(rnext*916.8))*rprime*(part%radius/taup0)) !ICE
-     Tprime = -(1./3.)*(Nup/Pra)*CpaCpp*(rhop/rhow)*(1./taup)*(Tnext-part%Tf) + 3.*Lv*(1./(rnext*Cpp))*rprime*(part%radius/taup0)
+     Tprime = (((-3.0*Nup*Cpa*nuf*rhoa)/(2.*Pra*2108.0*rhop*(rnext**2)))*(Tnext-part%Tf)) + (3.0*2108.0*(1.0/(rnext*rhop))*rprime*(part%radius/taup0)) !ICE
+     !Tprime = -(1./3.)*(Nup/Pra)*CpaCpp*(rhop/rhow)*(1./taup)*(Tnext-part%Tf) + 3.*Lv*(1./(rnext*Cpp))*rprime*(part%radius/taup0)
      Tprime = Tprime * (taup0/part%Tp)
      !!!!!!!!!!!!!!!!!
 
@@ -4637,7 +4634,7 @@ subroutine SFS_velocity
    !     ---------------------------------        
 
     Volp = pi2*2.0/3.0*part%radius**3
-    rhop = 916.8
+    rhop = (part%m_s+Volp*rhow)/Volp
 
     !Store the particle flux now that we have the new position
     if (part%xp(3) .gt. zl) then   !This will get treated in particle_bcs_nonperiodic, but record here
