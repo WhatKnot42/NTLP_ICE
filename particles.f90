@@ -5202,9 +5202,9 @@ SUBROUTINE balanc(a,n,np)
 END subroutine
    
 SUBROUTINE hqr(a,n,np,wr,wi)
-   !Finds all eigenvalues of an n by n upper Hessenberg matrix a that is stored in an np by np
-   !array. On input a can be exactly as output from elmhes; on output it is destroyed.
-   !The real and imaginary parts of the eigenvalues are returned in wr and wi , respectively.
+      !Finds all eigenvalues of an n by n upper Hessenberg matrix a that is stored in an np by np
+      !array. On input a can be exactly as output from elmhes; on output it is destroyed.
+      !The real and imaginary parts of the eigenvalues are returned in wr and wi , respectively.
       INTEGER n,np
       double precision a(np,np),wi(np),wr(np)
       INTEGER i,its,j,k,l,m,nn
