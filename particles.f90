@@ -3623,7 +3623,7 @@ subroutine particle_update_BE
       do while (associated(part))
       numpart = numpart + 1
       
-      if (part%radius .gt. 3.5e-6) then
+      if (part%radius .gt. part%rc) then
          myradavg = myradavg + part%radius
          myradmsqr = myradmsqr + part%radius**2
       end if
@@ -3635,7 +3635,7 @@ subroutine particle_update_BE
         numdrop_center = numdrop_center + 1
      end if
 
-      if (part%radius .gt. 3.5e-6) then
+      if (part%radius .gt. part%rc) then
          numdrop = numdrop + 1
       else
          numaerosol = numaerosol + 1
