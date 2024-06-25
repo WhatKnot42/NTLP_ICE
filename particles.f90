@@ -3428,8 +3428,7 @@ subroutine particle_update_BE
       part => part%next
       end do
       call end_phase(measurement_id_particle_loop)
-	  
-    !ICE HERE?
+	   !ICE HERE?
 
       !Enforce nonperiodic bcs (either elastic or destroying particles)
       call start_phase(measurement_id_particle_bcs)
@@ -4339,10 +4338,11 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
    real, intent(in) :: rhoa,vnext(3),tempr,tempt,h
    real, intent(out) :: v_output(3),rT_output(2)
 
-   real :: esa,dnext,m_w,rhop,Rep,taup,vprime(3),rprime,Tprime,qstr,Shp,Nup,dp,VolP,esi,Si,Dprime,Kprime
+   real :: esa,dnext,m_w,rhop,Rep,taup,vprime(3),rprime,Tprime,qstr,Shp,Nup,dp,VolP!,esi,Si,Dprime,Kprime
    real :: diff(3),diffnorm,Tnext,rnext,T
    real :: taup0,g(3)
-   real :: mod_magnus,mod_ice
+   real :: mod_magnus!,mod_ice
+
 
      taup0 = (((part%m_s)/((2./3.)*pi2*radius_init**3) + rhow)*(radius_init*2)**2)/(18*rhoa*nuf)
      g(1:3) = part_grav(1:3)
@@ -4355,10 +4355,10 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
      dnext = rnext * 2.
 
      esa = mod_magnus(part%Tf)
-     esi = mod_ice(part%Tf)
-     Si = esa/esi
+     !esi = mod_ice(part%Tf)
+     !Si = esa/esi
      VolP = (2./3.)*pi2*rnext**3
-     rhop = 916.8
+     rhop = (part%m_s + VolP*rhow) / VolP
 
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -4376,23 +4376,21 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
      !!!!!!!!!!!!!!!!!!
 
      !!! Radius !!!
-
-     Dprime = ((0.015*Tnext)-1.9)*(1e-5)
-     Kprime = ((1.5e-11)*(Tnext**3)) - ((4.8e-8)*(Tnext**2)) + ((1e-4)*Tnext) - (3.9e-4)
+     !Dprime = ((0.015*Tnext)-1.9)*(1e-5)
+     !Kprime = ((1.5e-11)*(Tnext**3)) - ((4.8e-8)*(Tnext**2)) + ((1e-4)*Tnext) - (3.9e-4)
 
      Shp = 2. + 0.6 * Rep**(1./2.) * Sc**(1./3.)
 
-     rprime = (3.*(Si-1))/(rhop*rnext*(((((2.838e6)/(467.0*Tnext))-1)*((2.838e6)/(Kprime*Tnext)))+(467.0/(esi*Dprime)))) !ICE
-     !rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr) 
-
+     !rprime = (3.*(Si-1))/(916.8*rnext*(((((2.838e6)/(467.0*Tnext))-1)*((2.838e6)/(Kprime*Tnext)))+(467.0/(esi*Dprime)))) !ICE
+     rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr) 
      rprime = rprime * (taup0/part%radius)
      !!!!!!!!!!!!!!!!!
 
      !!! Temperature !!!
      Nup = 2. + 0.6*Rep**(1./2.)*Pra**(1./3.);
 
-     Tprime = (((-3.0*Nup*Cpa*nuf*rhoa)/(2.*Pra*2108.0*rhop*(rnext**2)))*(Tnext-part%Tf)) + (3.0*2108.0*(1.0/(rnext*rhop))*rprime*(part%radius/taup0)) !ICE
-     !Tprime = -(1./3.)*(Nup/Pra)*CpaCpp*(rhop/rhow)*(1./taup)*(Tnext-part%Tf) + 3.*Lv*(1./(rnext*Cpp))*rprime*(part%radius/taup0)
+     !Tprime = (((-3.0*Nup*Cpa*nuf*rhoa)/(2.*Pra*2108.0*916.8*(rnext**2)))*(Tnext-part%Tf)) + (3.0*2108.0*(1.0/(rnext*916.8))*rprime*(part%radius/taup0)) !ICE
+     Tprime = -(1./3.)*(Nup/Pra)*CpaCpp*(rhop/rhow)*(1./taup)*(Tnext-part%Tf) + 3.*Lv*(1./(rnext*Cpp))*rprime*(part%radius/taup0)
      Tprime = Tprime * (taup0/part%Tp)
      !!!!!!!!!!!!!!!!!
 
