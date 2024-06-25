@@ -3428,7 +3428,7 @@ subroutine particle_update_BE
       part => part%next
       end do
       call end_phase(measurement_id_particle_loop)
-	!ICE STUFF HERE
+	   !ICE HERE?
 
       !Enforce nonperiodic bcs (either elastic or destroying particles)
       call start_phase(measurement_id_particle_bcs)
