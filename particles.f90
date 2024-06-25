@@ -3428,7 +3428,8 @@ subroutine particle_update_BE
       part => part%next
       end do
       call end_phase(measurement_id_particle_loop)
-	!ICE HERE?
+	  
+    !ICE HERE?
 
       !Enforce nonperiodic bcs (either elastic or destroying particles)
       call start_phase(measurement_id_particle_bcs)
@@ -4343,7 +4344,6 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
    real :: taup0,g(3)
    real :: mod_magnus,mod_ice
 
-
      taup0 = (((part%m_s)/((2./3.)*pi2*radius_init**3) + rhow)*(radius_init*2)**2)/(18*rhoa*nuf)
      g(1:3) = part_grav(1:3)
 
@@ -4376,6 +4376,7 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
      !!!!!!!!!!!!!!!!!!
 
      !!! Radius !!!
+
      Dprime = ((0.015*Tnext)-1.9)*(1e-5)
      Kprime = ((1.5e-11)*(Tnext**3)) - ((4.8e-8)*(Tnext**2)) + ((1e-4)*Tnext) - (3.9e-4)
 
@@ -4383,6 +4384,7 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
 
      rprime = (3.*(Si-1))/(rhop*rnext*(((((2.838e6)/(467.0*Tnext))-1)*((2.838e6)/(Kprime*Tnext)))+(467.0/(esi*Dprime)))) !ICE
      !rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr) 
+
      rprime = rprime * (taup0/part%radius)
      !!!!!!!!!!!!!!!!!
 
