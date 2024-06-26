@@ -2198,7 +2198,7 @@ subroutine new_particle(idx,procidx)
       xp_init = (/xv,yv,zv/) 
 
       m_s = radius_init**3*pi2*2.0/3.0*rhow*Sal  !Using the salinity specified in params.in
-
+      
       call create_particle(xp_init,vp_init,Tp_init,m_s,kappas_init,mult_init,radius_init,ngidx,procidx)
 
 
@@ -2220,6 +2220,7 @@ subroutine new_particle(idx,procidx)
       kappas_dinit = abs(kappas_std * sqrt(-2*log(ran2(iseed)))*cos(pi2*ran2(iseed)) + kappas_init)
 
       m_s = radius_dinit**3*pi2*2.0/3.0*rhow*Sal  !Using the salinity specified in params.in
+      
 
       call create_particle(xp_init,vp_init,Tp_init,m_s,kappas_dinit,mult_init,radius_dinit,ngidx,procidx)
 
@@ -2833,7 +2834,7 @@ subroutine particle_update_rk3(istage)
          diffnorm = sqrt(diff(1)**2 + diff(2)**2 + diff(3)**2)
          Rep = 2.0*part%radius*diffnorm/nuf  
          Volp = pi2*2.0/3.0*part%radius**3
-         rhop = (part%m_s+Volp*rhow)/Volp
+         rhop = 916.8
          taup_i = 18.0*rhoa*nuf/rhop/(2.0*part%radius)**2 
 
          myRep_avg = myRep_avg + Rep
@@ -3204,13 +3205,15 @@ subroutine particle_update_BE
         end if
 
 
-        part%Tf = 265.0
+        part%Tf = 255.0
         part%qinf = 0.02
         
         
         if (it .LE. 1) then
            part%vp(1:3) = part%uf
         end if
+
+        part%vp = 0.0
 
         if (iexner .eq. 1) then
            !Compute using the base-state pressure at the particle height
@@ -3233,7 +3236,7 @@ subroutine particle_update_BE
         diff(1:3) = part%vp - part%uf
         diffnorm = sqrt(diff(1)**2 + diff(2)**2 + diff(3)**2)
         Volp = pi2*2.0/3.0*part%radius**3
-        rhop = (part%m_s+Volp*rhow)/Volp
+        rhop = 916.8
         taup_i = 18.0*rhoa*nuf/rhop/(2.0*part%radius)**2
         Rep = 2.0*part%radius*diffnorm/nuf
         corrfac = (1.0 + 0.15*Rep**(0.687))
@@ -3345,7 +3348,7 @@ subroutine particle_update_BE
 
          !New volume and particle density
          Volp = pi2*2.0/3.0*part%radius**3
-         rhop = (part%m_s+Volp*rhow)/Volp
+         rhop = 916.8
 
          !Intermediate Values
          diff(1:3) = part%vp - part%uf
@@ -3428,9 +3431,9 @@ subroutine particle_update_BE
 
         end if  !Up/down conditional statement
 
-        if (part%Tp .ge. 273.15) then
-            call destroy_particle
-        end if
+        !if (part%Tp .gt. 273.15) then
+        !    call destroy_particle
+        !end if
 
       part => part%next
       end do
@@ -4364,7 +4367,7 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
      esi = mod_ice(part%Tf)
      Si = esa/esi
      VolP = (2./3.)*pi2*rnext**3
-     rhop = (part%m_s + VolP*rhow) / VolP
+     rhop = 916.3
 
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -4640,7 +4643,7 @@ subroutine SFS_velocity
    !     ---------------------------------        
 
     Volp = pi2*2.0/3.0*part%radius**3
-    rhop = (part%m_s+Volp*rhow)/Volp
+    rhop = 916.8
 
     !Store the particle flux now that we have the new position
     if (part%xp(3) .gt. zl) then   !This will get treated in particle_bcs_nonperiodic, but record here
