@@ -3424,6 +3424,9 @@ subroutine particle_update_BE
 
         end if  !Up/down conditional statement
 
+        if (part%Tp > 273.15) then
+            call(destroy_particle)
+        end if
 
       part => part%next
       end do
