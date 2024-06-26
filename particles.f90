@@ -88,7 +88,7 @@ module particles
   end type particle
 
   type(particle), pointer :: part,first_particle
-  type(particle), pointer :: icepart,first_ice_particle
+  !type(particle), pointer :: icepart,first_ice_particle
 
 CONTAINS
 
@@ -3204,6 +3204,10 @@ subroutine particle_update_BE
         end if
 
 
+        part%Tf = 265.0
+        part%qinf = 0.02
+        
+        
         if (it .LE. 1) then
            part%vp(1:3) = part%uf
         end if
@@ -3626,10 +3630,9 @@ subroutine particle_update_BE
       do while (associated(part))
       numpart = numpart + 1
       
-      if (part%radius .gt. part%rc) then
-         myradavg = myradavg + part%radius
-         myradmsqr = myradmsqr + part%radius**2
-      end if
+      myradavg = myradavg + part%radius
+      myradmsqr = myradmsqr + part%radius**2
+      
 
      !Want to get droplet statistics only in the interior
      if (part%xp(3) .gt. 0.25*zl .AND. part%xp(3) .lt. 0.75*zl) then
