@@ -1,10 +1,10 @@
 !Time step information
 &step_params
-itmax = 10000   !Max number of time steps
+itmax = 5000   !Max number of time steps
 imean = 100    !Number of time steps between writing mean profiles to output log file
-ihst = 50     !Number of time steps between writing profiles to history file
+ihst = 5001     !Number of time steps between writing profiles to history file
 itape = 5000  !Number of time steps before opening new history file and writing full 3D volumes
-i_viz = 100   !Time steps between writing to viz file
+i_viz = 5001   !Time steps between writing to viz file
 max_time = 1.0e9  !Code will stop at the next itape after this time (in seconds) has been exceeded
 /
 
@@ -87,10 +87,10 @@ rad_Fcb = 0.0    !Net radiative flux at cloud (or domain) base
 !Set the paths for code I/O. Must be on the scratch directory, not AFS!
 &path_names
 
-path_seed = "PATH_TO_SCRATCH/pi_chamber/"
-path_part = "PATH_TO_SCRATCH/pi_chamber/part.le.cou002"
-path_res = "PATH_TO_SCRATCH/pi_chamber/u.le.cou002"
-path_ran = "PATH_TO_SCRATCH/pi_chamber/u.le.cou000"
+path_seed = "/scratch365/broper/pi_chamber/"
+path_part = "/scratch365/broper/pi_chamber/part.le.cou002"
+path_res = "/scratch365/broper/pi_chamber/u.le.cou002"
+path_ran = "/scratch365/broper/pi_chamber/u.le.cou000"
 
 /
 
@@ -113,10 +113,10 @@ Rd = 286.9     !J/kg-K  dry air gas constant
 !Particles:
 tnumpart = 1
 mult_init = 1000.0
-rhow = 1000.0  !kg/m^3
+rhow = 916.8  !kg/m^3
 rhos = 2000.0 !Density of salt, kg/m^3
 part_grav = 0,0,-0.649
-Cpp = 4179.0  !J/kg-K
+Cpp = 2108.0  !J/kg-K
 Mw = 0.018015  !kg/mol
 Ru = 8.3144    !J/mol-K Universal gas constant
 Ms = 0.05844  !kg/mol: molecular weight of salt
@@ -132,6 +132,6 @@ radius_init = 2.0e-6
 radius_std = 0.0
 kappas_init = 1.2
 kappas_std = 0.0
-Tp_init = 267.15
+Tp_init = 267.0
 vp_init = 0.0, 0.0, 0.0
 /
