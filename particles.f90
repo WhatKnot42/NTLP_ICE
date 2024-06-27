@@ -47,7 +47,7 @@ module particles
   integer :: tot_reintro=0
 
   real :: Rep_avg,part_grav(3)
-  real :: radavg,radmin,radmax,radmsqr,tempmin,tempmax,qmin,qmax
+  real :: radavg,radmin,radmax,radmsqr,tempmin,tempmax,qmin,qmax,radaeravg
   real :: radavg_center,radmsqr_center
   real :: vp_init(3),Tp_init,radius_init,radius_std,kappas_init,kappas_std
   real :: pdf_factor,pdf_prob
@@ -3128,7 +3128,7 @@ subroutine particle_update_BE
       real :: tmpbuf(9),tmpbuf_rec(9)
       integer :: intbuf(10),intbuf_rec(10)
       integer :: numdrop_center,tnumdrop_center
-      real :: myradavg,myradmax,myradmin,mytempmax,mytempmin
+      real :: myradavg,myradmax,myradmin,mytempmax,mytempmin,myradaer
       real :: myradavg_center,myradmsqr_center
       real :: myradmsqr
       real :: myqmin,myqmax
@@ -3144,7 +3144,7 @@ subroutine particle_update_BE
       real :: taup0, dt_taup0, temp_r, temp_t, guess
       real :: tmp_coeff
       real :: xp3i
-      real :: mod_magnus,exner,func_p_base
+      real :: mod_magnus,mod_ice,exner,func_p_base
       real :: rad_i,Tp_i,vp_i(3),mp_i,rhop_i
 
 
@@ -3367,7 +3367,7 @@ subroutine particle_update_BE
          Shp = 2.0 + 0.6*Rep**(1.0/2.0)*Sc**(1.0/3.0)
 
          !Mass Transfer calculations
-         einf = mod_magnus(part%Tf)
+         einf = mod_ice(part%Tf)
 
          Eff_C = 2.0*Mw*Gam/(Ru*rhow*part%radius*part%Tp)
          Eff_S = part%kappa_s*part%m_s*rhow/rhos/(Volp*rhop-part%m_s)
@@ -3622,7 +3622,8 @@ subroutine particle_update_BE
       myradmsqr = 0.0
       myradavg_center = 0.0
       myradmsqr_center = 0.0
-      myradmin=1000.0
+      myradaer = 0.0
+      myradmin = 1000.0
       myradmax = 0.0
       mytempmin = 1000.0
       mytempmax = 0.0
@@ -3633,9 +3634,12 @@ subroutine particle_update_BE
       do while (associated(part))
       numpart = numpart + 1
       
-      myradavg = myradavg + part%radius
-      myradmsqr = myradmsqr + part%radius**2
-      
+      if (part%radius .ge. 3.5e-6) then
+         myradavg = myradavg + part%radius
+         myradmsqr = myradmsqr + part%radius**2
+      else
+         myradaer = myradaer + part%radius
+      end if
 
      !Want to get droplet statistics only in the interior
      if (part%xp(3) .gt. 0.25*zl .AND. part%xp(3) .lt. 0.75*zl) then
@@ -3644,7 +3648,7 @@ subroutine particle_update_BE
         numdrop_center = numdrop_center + 1
      end if
 
-      if (part%radius .gt. part%rc) then
+      if (part%radius .gt. 3.5e-6) then
          numdrop = numdrop + 1
       else
          numaerosol = numaerosol + 1
@@ -3698,6 +3702,7 @@ subroutine particle_update_BE
       tmpbuf(7) = avgres
       tmpbuf(8) = myradavg_center
       tmpbuf(9) = myradmsqr_center
+      tmpbuf(10) = myradaer
 
       call mpi_allreduce(tmpbuf,tmpbuf_rec,9,mpi_real8,mpi_sum,mpi_comm_world,ierr)
 
@@ -3710,6 +3715,7 @@ subroutine particle_update_BE
       tavgres = tmpbuf_rec(7)
       radavg_center = tmpbuf_rec(8)
       radmsqr_center = tmpbuf_rec(9)
+      radaeravg = tmpbuf_rec(10)
 
 
 
@@ -3719,10 +3725,12 @@ subroutine particle_update_BE
          Rep_avg = 0.0
          radavg = 0.0
          radmsqr = 0.0
+         radaeravg = 0.0
       else
          Rep_avg = Rep_avg/tnumpart
          radavg = radavg/tnumdrop
          radmsqr = radmsqr/tnumdrop
+         radaeravg = radaeravg/tnumaerosol
       end if
       
       if (tnum_destroy.eq.0) then
@@ -4422,10 +4430,10 @@ subroutine rad_solver2(guess,rhoa,mflag)
       integer, intent(OUT) :: mflag
       real, intent(in) :: rhoa
       real :: a, c, esa, Q, R, M, val, theta, S, T
-      real :: mod_magnus
+      real :: mod_ice
 
       mflag = 0
-      esa = mod_magnus(part%Tf)
+      esa = mod_ice(part%Tf)
 
       a = -(2*Mw*Gam)/(Ru*rhow*part%Tf)/LOG((Ru*part%Tf*rhoa*part%qinf)/(Mw*esa))
       c = (part%kappa_s*part%m_s)/((2.0/3.0)*pi2*rhos)/LOG((Ru*part%Tf*rhoa*part%qinf)/(Mw*esa))
