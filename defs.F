@@ -38,7 +38,7 @@ c
       real :: radflux(0:maxnz),radsrc(maxnz)
 
       !Material parameters, both air and particles
-      real :: Lv = (25.0 - 0.02274*26.0)*10.0**5
+      real :: Lv = 2.838e6
       real :: Sal,Ms,Gam,Ion
       real :: rhow,nuf,rhos
       real :: CpaCpp,Cpa,Cpp,Pra,Sc,Mw,Ru,Rd
