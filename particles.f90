@@ -4359,65 +4359,72 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
    real :: diff(3),diffnorm,Tnext,rnext,T
    real :: taup0,g(3)
    real :: mod_magnus,mod_ice
+   real :: pi,mdot,Vdot
 
 
-     taup0 = (((part%m_s)/((2./3.)*pi2*radius_init**3) + rhow)*(radius_init*2)**2)/(18*rhoa*nuf)
-     g(1:3) = part_grav(1:3)
+        taup0 = (((part%m_s)/((2./3.)*pi2*radius_init**3) + rhow)*(radius_init*2)**2)/(18*rhoa*nuf)
+        g(1:3) = part_grav(1:3)
+        pi = 4.0*atan(1.0)
 
-     ! quantities come in already non-dimensionalized, so must be
-     ! converted back;
-     ! velocity is not non-dimensionalized so no need to change
-     rnext = tempr * part%radius
-     Tnext = tempt * part%Tp
-     dnext = rnext * 2.
+        ! quantities come in already non-dimensionalized, so must be
+        ! converted back;
+        ! velocity is not non-dimensionalized so no need to change
+        rnext = tempr * part%radius
+        Tnext = tempt * part%Tp
+        dnext = rnext * 2.
 
-     esa = mod_magnus(part%Tf)
-     esi = mod_ice(part%Tf)
-     Si = esa/esi
-     VolP = (2./3.)*pi2*rnext**3
-     rhop = 916.3
+        esa = mod_magnus(part%Tf)
+        esi = mod_ice(part%Tf)
+        Si = esa/esi
+        VolP = (2./3.)*pi2*rnext**3
+        rhop = 916.3
 
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-     !!! Velocity !!!
-     diff(1:3) = part%uf - vnext
-     diffnorm = sqrt(diff(1)**2 + diff(2)**2 + diff(3)**2)
-     Rep = dnext * diffnorm/nuf
-     taup = (rhop * dnext**2)/(18.0*rhoa*nuf)
-     vprime(1:3) = (1. + 0.15 * (Rep**0.687)) * (1./taup)*diff(1:3) - g(1:3)
-     vprime(1:3) = vprime(1:3) * taup0 ** 2
-     !!!!!!!!!!!!!!!!
+        !!! Velocity !!!
+        diff(1:3) = part%uf - vnext
+        diffnorm = sqrt(diff(1)**2 + diff(2)**2 + diff(3)**2)
+        Rep = dnext * diffnorm/nuf
+        taup = (rhop * dnext**2)/(18.0*rhoa*nuf)
+        vprime(1:3) = (1. + 0.15 * (Rep**0.687)) * (1./taup)*diff(1:3) - g(1:3)
+        vprime(1:3) = vprime(1:3) * taup0 ** 2
+        !!!!!!!!!!!!!!!!
 
-     !!! Humidity !!!
-     qstr = (Mw/(Ru*Tnext*rhoa)) * esa * exp(((Lv*Mw/Ru)*((1./part%Tf) - (1./Tnext))) + ((2.*Mw*Gam)/(Ru*rhow*rnext*Tnext)) - ((part%kappa_s*part%m_s*rhow/rhos)/(Volp*rhop-part%m_s)))
-     !!!!!!!!!!!!!!!!!!
+        !!! Humidity !!!
+        qstr = (Mw/(Ru*Tnext*rhoa)) * esa * exp(((Lv*Mw/Ru)*((1./part%Tf) - (1./Tnext))) + ((2.*Mw*Gam)/(Ru*rhow*rnext*Tnext)) - ((part%kappa_s*part%m_s*rhow/rhos)/(Volp*rhop-part%m_s)))
+        !!!!!!!!!!!!!!!!!!
 
-     !!! Radius !!!
-     Dprime = ((0.015*Tnext)-1.9)*(1e-5)
-     Kprime = ((1.5e-11)*(Tnext**3)) - ((4.8e-8)*(Tnext**2)) + ((1e-4)*Tnext) - (3.9e-4)
+        !!! Radius !!!
+        Dprime = ((0.015*Tnext)-1.9)*(1e-5)
+        Kprime = ((1.5e-11)*(Tnext**3)) - ((4.8e-8)*(Tnext**2)) + ((1e-4)*Tnext) - (3.9e-4)
 
-     Shp = 2. + 0.6 * Rep**(1./2.) * Sc**(1./3.)
+        Shp = 2. + 0.6 * Rep**(1./2.) * Sc**(1./3.)
+        !mdot = (4.0*pi*rnext*(Si-1))/((((Lv/(467.0*Tnext))-1)*(Lv/(Kprime*Tnext)))+(467.0/(esi*Dprime)))
+        !dot = mdot/rhop
+        !rprime = Vdot / ((4/3)*pi*(rnext**2))
 
-     rprime = (3.0*(Si-1))/(rhop*rnext*((((Lv/(467.0*Tnext))-1)*(Lv/(Kprime*Tnext)))+(467.0/(esi*Dprime)))) !ICE
-     !rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr) 
-     rprime = rprime * (taup0/part%radius)
-     !!!!!!!!!!!!!!!!!
 
-     !!! Temperature !!!
-     Nup = 2. + 0.6*Rep**(1./2.)*Pra**(1./3.);
+        !rprime = (3.0*pi*(Si-1))/(rhop*rnext*((((Lv/(467.0*Tnext))-1)*(Lv/(Kprime*Tnext)))+(467.0/(esi*Dprime))))
+        rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr)
+        rprime = rprime * (taup0/part%radius)
+        !!!!!!!!!!!!!!!!!
 
-     Tprime = (((-3.0*Nup*Cpa*nuf*rhoa)/(2.*Pra*Cpp*rhop*(rnext**2)))*(Tnext-part%Tf)) + (3.0*Lv*(1.0/(rnext*Cpp))*rprime*(part%radius/taup0)) !ICE
-     !Tprime = -(1./3.)*(Nup/Pra)*CpaCpp*(rhop/rhow)*(1./taup)*(Tnext-part%Tf) + 3.*Lv*(1./(rnext*Cpp))*rprime*(part%radius/taup0)
-     Tprime = Tprime * (taup0/part%Tp)
-     !!!!!!!!!!!!!!!!!
+        !!! Temperature !!!
+        Nup = 2. + 0.6*Rep**(1./2.)*Pra**(1./3.);
 
-     ! velocity is not non-dimensionalized so it does not need to be
-     ! changed back
-     v_output(1:3) = vnext(1:3) - part%vp(1:3) - h * vprime(1:3)
-     rT_output(1) = rnext/part%radius - 1.0  - h*rprime
-     rT_output(2) = Tnext/part%Tp - 1.0  - h*Tprime
+        Tprime = (((-3.0*Nup*Cpa*nuf*rhoa)/(2.*Pra*Cpp*rhop*(rnext**2)))*(Tnext-part%Tf)) + (3.0*Lv*(1.0/(rnext*Cpp))*rprime*(part%radius/taup0)) 
 
-end subroutine ie_vrt_nd
+        !Tprime = -(1./3.)*(Nup/Pra)*CpaCpp*(rhop/rhow)*(1./taup)*(Tnext-part%Tf) + 3.*Lv*(1./(rnext*Cpp))*rprime*(part%radius/taup0)
+        Tprime = Tprime * (taup0/part%Tp)
+        !!!!!!!!!!!!!!!!!
+
+        ! velocity is not non-dimensionalized so it does not need to be
+        ! changed back
+        v_output(1:3) = vnext(1:3) - part%vp(1:3) - h * vprime(1:3)
+        rT_output(1) = rnext/part%radius - 1.0  - h*rprime
+        rT_output(2) = Tnext/part%Tp - 1.0  - h*Tprime
+
+  end subroutine ie_vrt_nd
 
 subroutine rad_solver2(guess,rhoa,mflag)
       use pars
