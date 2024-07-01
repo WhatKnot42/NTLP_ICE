@@ -4399,21 +4399,16 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
         Kprime = ((1.5e-11)*(Tnext**3)) - ((4.8e-8)*(Tnext**2)) + ((1e-4)*Tnext) - (3.9e-4)
 
         Shp = 2. + 0.6 * Rep**(1./2.) * Sc**(1./3.)
-        !mdot = (4.0*pi*rnext*(Si-1))/((((Lv/(467.0*Tnext))-1)*(Lv/(Kprime*Tnext)))+(467.0/(esi*Dprime)))
-        !dot = mdot/rhop
-        !rprime = Vdot / ((4/3)*pi*(rnext**2))
 
-
-        !rprime = (3.0*pi*(Si-1))/(rhop*rnext*((((Lv/(467.0*Tnext))-1)*(Lv/(Kprime*Tnext)))+(467.0/(esi*Dprime))))
-        rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr)
+        rprime = (3.0*pi*(Si-1))/(rhop*rnext*((((Lv/(467.0*Tnext))-1)*(Lv/(Kprime*Tnext)))+(467.0/(esi*Dprime)))) !ICE
+        !rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr)
         rprime = rprime * (taup0/part%radius)
         !!!!!!!!!!!!!!!!!
 
         !!! Temperature !!!
         Nup = 2. + 0.6*Rep**(1./2.)*Pra**(1./3.);
 
-        Tprime = (((-3.0*Nup*Cpa*nuf*rhoa)/(2.*Pra*Cpp*rhop*(rnext**2)))*(Tnext-part%Tf)) + (3.0*Lv*(1.0/(rnext*Cpp))*rprime*(part%radius/taup0)) 
-
+        Tprime = (((-3.0*Nup*Cpa*nuf*rhoa)/(2.*Pra*Cpp*rhop*(rnext**2)))*(Tnext-part%Tf)) + (3.0*Lv*(1.0/(rnext*Cpp))*rprime*(part%radius/taup0)) !ICE
         !Tprime = -(1./3.)*(Nup/Pra)*CpaCpp*(rhop/rhow)*(1./taup)*(Tnext-part%Tf) + 3.*Lv*(1./(rnext*Cpp))*rprime*(part%radius/taup0)
         Tprime = Tprime * (taup0/part%Tp)
         !!!!!!!!!!!!!!!!!
