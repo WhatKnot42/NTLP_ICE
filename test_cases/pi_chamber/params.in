@@ -20,9 +20,9 @@ ifields = 1  ! if set to 1, reads the initial condition from path_ran below; oth
 irestart = 0
 ihurr = 0  !If set to 1, includes the hurricane forcings from Bryan et al. (2017) BLM and according to dvdr and hurr_rad below
 ilin = 1   !1 means linear interpolation for particle, 6th order otherwise
-icouple = 0
-iTcouple = 0
-iHcouple = 0  !iHcouple also controls TE couple
+icouple = 1
+iTcouple = 1
+iHcouple = 1  !iHcouple also controls TE couple
 ievap = 1
 ineighbor = 0
 icoalesce = 0
@@ -125,7 +125,7 @@ Sal = 0.066  !INITIAL salinity in kg/kg
 Gam = 7.28e-2
 Ion = 2.0
 
-nprime = 0.01  !particles/cm^3/min, real rate is nprime*multiplicity
+nprime = 0.005  !particles/cm^3/min, real rate is nprime*multiplicity
 
 !Particle initial conditions:
 radius_init = 2.0e-6
