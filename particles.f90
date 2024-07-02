@@ -2437,7 +2437,7 @@ subroutine new_ice_particle(idx,procidx)
  
        m_s = 0
  
-       call create_ice_particle(xp_init,vp_i_init,Tp_i_init,m_s,kappas_i_init,mult_init_ice,rad_i_init,ngidx,procidx)
+       call create_ice_particle(xp_init,vp_i_init,Tp_i_init,m_s,kappas_i_dinit,mult_init_ice,radius_i_dinit,ngidx,procidx)
  
  
  
