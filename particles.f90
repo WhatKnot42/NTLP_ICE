@@ -1759,42 +1759,42 @@ subroutine ice_particle_exchange
       if (part%xp(2) .GT. ymax) then 
          if (part%xp(1) .GT. xmax) then !top right
             trbuf_s(itr) = part
-            call destroy_ice_particle
+            call destroy_particle
             itr = itr + 1 
          elseif (part%xp(1) .LT. xmin) then !bottom right
             brbuf_s(ibr) = part
-            call destroy_ice_particle
+            call destroy_particle
             ibr = ibr + 1
          else   !right
             rbuf_s(ir) = part
-            call destroy_ice_particle
+            call destroy_particle
             ir = ir + 1
          end if
       elseif (part%xp(2) .LT. ymin) then
          if (part%xp(1) .GT. xmax) then !top left
             tlbuf_s(itl) = part
-            call destroy_ice_particle
+            call destroy_particle
             itl = itl + 1
          else if (part%xp(1) .LT. xmin) then !bottom left
             blbuf_s(ibl) = part
-            call destroy_ice_particle
+            call destroy_particle
             ibl = ibl + 1
          else  !left
             lbuf_s(il) = part
-            call destroy_ice_particle
+            call destroy_particle
             il = il + 1
          end if
       elseif ( (part%xp(1) .GT. xmax) .AND. &
                (part%xp(2) .LT. ymax) .AND. &
                (part%xp(2) .GT. ymin) ) then !top
          tbuf_s(itop) = part
-         call destroy_ice_particle
+         call destroy_particle
          itop = itop + 1
       elseif ( (part%xp(1) .LT. xmin) .AND. &
                (part%xp(2) .LT. ymax) .AND. &
                (part%xp(2) .GT. ymin) ) then !bottom
          bbuf_s(ib) = part
-         call destroy_ice_particle
+         call destroy_particle
          ib = ib + 1 
       else
       part => part%next
@@ -3161,7 +3161,8 @@ subroutine particle_bcs_nonperiodic
                !With these parameters, get m_s and rad_init from distribution
                call lognormal_dist(rad_init,m_s,kappa_s,M,S)
 
-               call create_particle(xp_init,vp_init,Tp_init,m_s,kappa_s,mult,rad_init,idx_old,procidx_old)
+               call create_particle(xp_init,vp_init,Tp_init,m_s,kappa_s,mult,rad_init,idx_old,procidx_old) 
+               !!!!!!!!!! I Need to add something here if it is an ice particle
 
           else
 
@@ -3172,6 +3173,7 @@ subroutine particle_bcs_nonperiodic
        
           if (icase.eq.5 .or. icase.eq.3) then
              call new_particle(idx_old,procidx_old)
+             !!!!!! Might need to add ice particle case here
           end if
 
        end if ! icase to decide whether to reflect
@@ -3417,6 +3419,7 @@ subroutine particle_update_rk3(istage)
       !If they did, remove from one list and add to another
       t_s = mpi_wtime()
       call particle_exchange
+      call ice_particle_exchange
       call mpi_barrier(mpi_comm_world,ierr)
       t_f = mpi_wtime()
       if (myid==5) write(*,*) 'time exchg:', t_f - t_s
@@ -4184,6 +4187,7 @@ subroutine particle_update_BE
       !If they did, remove from one list and add to another
       call start_phase(measurement_id_particle_exchange)
       call particle_exchange
+      call ice_particle_exchange
       call end_phase(measurement_id_particle_exchange)
 
       !Now enforce periodic bcs 
@@ -4517,34 +4521,6 @@ subroutine destroy_particle
       end if
    
 end subroutine destroy_particle
-
-subroutine destroy_ice_particle
-   implicit none
-
-   type(particle), pointer :: tmp
-
-   !Is it the first and last in the list?
-   if (associated(part,first_ice_particle) .AND. (.NOT. associated(part%next)) ) then
-       nullify(first_particle)
-       deallocate(part)
-   else
-     if (associated(part,first_ice_particle)) then !Is it the first particle?
-        first_particle => part%next
-        part => first_particle
-        deallocate(part%prev)
-     elseif (.NOT. associated(part%next)) then !Is it the last particle?
-        nullify(part%prev%next)
-        deallocate(part)
-     else
-        tmp => part
-        part => part%next
-        tmp%prev%next => tmp%next
-        tmp%next%prev => tmp%prev
-        deallocate(tmp)
-     end if
-   end if
-
-end subroutine destroy_ice_particle
 
 subroutine particle_stats
       use pars
@@ -5101,7 +5077,7 @@ subroutine inverse_finder_2d(C,det,invC)
 
 end subroutine inverse_finder_2d
 
-subroutine ie_vrt_nd(rhoa,vnext, tempr, tempt, v_output,rt_output, h)
+subroutine ie_vrt_nd(rhoa,vnext, tempr, tempt, v_output,rt_output, h) !!! Ice version needed
       use pars
       use con_data
       use con_stats
@@ -5438,6 +5414,7 @@ subroutine SFS_velocity
 
   call particle_bcs_nonperiodic
   call particle_exchange
+  call ice_particle_exchange
   call particle_bcs_periodic
 
   numpart = 0
@@ -5552,6 +5529,7 @@ subroutine SFS_position
 
   call particle_bcs_nonperiodic
   call particle_exchange
+  call ice_particle_exchange
   call particle_bcs_periodic
 
   numpart = 0
