@@ -4400,8 +4400,10 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
 
         Shp = 2. + 0.6 * Rep**(1./2.) * Sc**(1./3.)
 
-        rprime = (3.0*pi*(Si-1))/(rhop*rnext*((((Lv/(467.0*Tnext))-1)*(Lv/(Kprime*Tnext)))+(467.0/(esi*Dprime)))) !ICE
-        !rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr)
+        !mdot = (4.0*pi*rnext*(Si-1))/((((Lv/(467.0*Tnext))-1)*(Lv/(Kprime*Tnext)))+(467.0/(esi*Dprime)))
+        !Vdot = mdot/rhop
+        !rprime = Vdot / ((4/3)*pi*(rnext**2))
+        rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr)
         rprime = rprime * (taup0/part%radius)
         !!!!!!!!!!!!!!!!!
 
