@@ -3260,7 +3260,7 @@ subroutine particle_update_BE
         ! non-dimensionalizes particle radius and temperature before
         ! iteratively solving for next radius and temperature
 
-        taup0 = ((rhow)*(rad_i*2)**2)/(18*rhoa*nuf)
+        taup0 = ((rhow)*(radius_init*2)**2)/(18*rhoa*nuf)
 
         dt_taup0 = dt/taup0
 
@@ -4362,7 +4362,7 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
    real :: pi,mdot,Vdot
 
 
-        taup0 = (rhow*(part%radius*2)**2)/(18*rhoa*nuf)
+        taup0 = (rhow*(radius_init*2)**2)/(18*rhoa*nuf)
         g(1:3) = part_grav(1:3)
         pi = 4.0*atan(1.0)
 
