@@ -3269,15 +3269,15 @@ subroutine particle_update_BE
                !Gives initial guess into nonlinear solver
                !mflag = 0, has equilibrium radius; mflag = 1, no
                !equilibrium (uses itself as initial guess)
-               call rad_solver2(guess,rhoa,mflag)
+               !call rad_solver2(guess,rhoa,mflag)
 
-               if (mflag == 0) then
-                rt_start(1) = guess/part%radius
-                rt_start(2) = part%Tf/part%Tp
-               else
+              ! if (mflag == 0) then
+               ! rt_start(1) = guess/part%radius
+               ! rt_start(2) = part%Tf/part%Tp
+               !else
                 rt_start(1) = 1.0
                 rt_start(2) = 1.0
-               end if
+               !end if
 
                call gauss_newton_2d(part%vp,dt_taup0,rhoa,rt_start, rt_zeroes,flag)
 
@@ -4355,7 +4355,7 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
    real, intent(in) :: rhoa,vnext(3),tempr,tempt,h
    real, intent(out) :: v_output(3),rT_output(2)
 
-   real :: esa,dnext,m_w,rhop,Rep,taup,vprime(3),rprime,Tprime,qstr,Shp,Nup,dp,VolP,esi,Si,Dprime,Kprime
+   real :: esa,dnext,m_w,rhop,Rep,taup,vprime(3),rprime,Tprime,qstr,Shp,Nup,dp,VolP,esi,Si,Dprime,Kprime,ev,qv
    real :: diff(3),diffnorm,Tnext,rnext,T
    real :: taup0,g(3)
    real :: mod_magnus,mod_ice
@@ -4373,9 +4373,7 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
         Tnext = tempt * part%Tp
         dnext = rnext * 2.
 
-        esa = mod_magnus(part%Tf)
         esi = mod_ice(part%Tf)
-        Si = esa/esi
         VolP = (2./3.)*pi2*rnext**3
         rhop = 916.3
 
@@ -4391,7 +4389,9 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
         !!!!!!!!!!!!!!!!
 
         !!! Humidity !!!
-        qstr = (Mw/(Ru*Tnext*rhoa)) * esa * exp(((Lv*Mw/Ru)*((1./part%Tf) - (1./Tnext))) + ((2.*Mw*Gam)/(Ru*rhow*rnext*Tnext)) - ((part%kappa_s*part%m_s*rhow/rhos)/(Volp*rhop-part%m_s)))
+        qv = 0.002
+        ev = (qv*rhoa*Ru) / (part%Tf*Mw)
+        Si = ev/esi
         !!!!!!!!!!!!!!!!!!
 
         !!! Radius !!!
@@ -4400,7 +4400,7 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
 
         Shp = 2. + 0.6 * Rep**(1./2.) * Sc**(1./3.)
 
-        mdot = (4.0*pi*rnext*(Si-1))/((((Lv/(467.0*Tnext))-1)*(Lv/(Kprime*Tnext)))+(467.0/(esi*Dprime)))
+        mdot = (4.0*pi*rnext*(Si-1))/((((Lv/(467.0*Tnext))-1)*(Lv/(Kprime*Tnext)))+(467.0/((mod_ice(Tnext))*Dprime)))
         Vdot = mdot/rhop
         rprime = Vdot / ((4/3)*pi*(rnext**2))
         !rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr)
