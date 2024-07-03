@@ -3260,7 +3260,7 @@ subroutine particle_update_BE
         ! non-dimensionalizes particle radius and temperature before
         ! iteratively solving for next radius and temperature
 
-        taup0 = ((rhow)*(radius_init*2)**2)/(18*rhoa*nuf)
+        taup0 = ((rhow)*(rad_i*2)**2)/(18*rhoa*nuf)
 
         dt_taup0 = dt/taup0
 
@@ -4362,7 +4362,7 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
    real :: pi,mdot,Vdot
 
 
-        taup0 = (rhow*(radius_init*2)**2)/(18*rhoa*nuf)
+        taup0 = (rhow*(part%radius*2)**2)/(18*rhoa*nuf)
         g(1:3) = part_grav(1:3)
         pi = 4.0*atan(1.0)
 
@@ -4400,10 +4400,10 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
 
         Shp = 2. + 0.6 * Rep**(1./2.) * Sc**(1./3.)
 
-        !mdot = (4.0*pi*rnext*(Si-1))/((((Lv/(467.0*Tnext))-1)*(Lv/(Kprime*Tnext)))+(467.0/(esi*Dprime)))
-        !Vdot = mdot/rhop
-        !rprime = Vdot / ((4/3)*pi*(rnext**2))
-        rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr)
+        mdot = (4.0*pi*rnext*(Si-1))/((((Lv/(467.0*Tnext))-1)*(Lv/(Kprime*Tnext)))+(467.0/(esi*Dprime)))
+        Vdot = mdot/rhop
+        rprime = Vdot / ((4/3)*pi*(rnext**2))
+        !rprime = (1./9.) * (Shp/Sc) * (rhop/rhow) * (rnext/taup) * (part%qinf - qstr)
         rprime = rprime * (taup0/part%radius)
         !!!!!!!!!!!!!!!!!
 
