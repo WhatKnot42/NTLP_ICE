@@ -4390,7 +4390,7 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
 
         !!! Humidity !!!
         qv = 0.002
-        ev = (qv*rhoa*Ru) / (part%Tf*Mw)
+        ev = (qv*rhoa*Ru*part%Tf) / (Mw)
         Si = ev/esi
         !!!!!!!!!!!!!!!!!!
 
