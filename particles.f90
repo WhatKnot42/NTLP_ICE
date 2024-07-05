@@ -3205,7 +3205,7 @@ subroutine particle_update_BE
         end if
 
 
-        part%Tf = 255.0
+        part%Tf = 262.0
         part%qinf = 0.002
         
         
@@ -4373,6 +4373,7 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
         Tnext = tempt * part%Tp
         dnext = rnext * 2.
 
+        esa = mod_magnus(part%Tf)
         esi = mod_ice(part%Tf)
         VolP = (2./3.)*pi2*rnext**3
         rhop = 916.3
@@ -4389,7 +4390,7 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
         !!!!!!!!!!!!!!!!
 
         !!! Humidity !!!
-        qv = 0.002
+        !qstr = (Mw/(Ru*Tnext*rhoa)) * esa * exp(((Lv*Mw/Ru)*((1./part%Tf) - (1./Tnext))) + ((2.*Mw*Gam)/(Ru*rhow*rnext*Tnext)) - ((part%kappa_s*part%m_s*rhow/rhos)/(Volp*rhop-part%m_s)))
         ev = (qv*rhoa*Ru*part%Tf) / (Mw)
         Si = ev/esi
         !!!!!!!!!!!!!!!!!!
