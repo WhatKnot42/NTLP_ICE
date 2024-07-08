@@ -4373,6 +4373,7 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
         Tnext = tempt * part%Tp
         dnext = rnext * 2.
 
+        esa = mod_magnus(part%Tf)
         esi = mod_ice(part%Tf)
         VolP = (2./3.)*pi2*rnext**3
         rhop = 916.3
