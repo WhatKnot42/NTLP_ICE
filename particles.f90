@@ -4356,7 +4356,6 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
 
      esa = mod_magnus(part%Tf)
      !esi = mod_ice(part%Tf)
-     !Si = esa/esi
      VolP = (2./3.)*pi2*rnext**3
      rhop = (part%m_s + VolP*rhow) / VolP
 
@@ -4373,6 +4372,8 @@ subroutine ie_vrt_nd(rhoa,vnext,tempr,tempt,v_output,rt_output, h)
 
      !!! Humidity !!!
      qstr = (Mw/(Ru*Tnext*rhoa)) * esa * exp(((Lv*Mw/Ru)*((1./part%Tf) - (1./Tnext))) + ((2.*Mw*Gam)/(Ru*rhow*rnext*Tnext)) - ((part%kappa_s*part%m_s*rhow/rhos)/(Volp*rhop-part%m_s)))
+     !ev = (qv*rhoa*Ru*part%Tf) / (Mw)
+     !Si = ev/esi
      !!!!!!!!!!!!!!!!!!
 
      !!! Radius !!!
