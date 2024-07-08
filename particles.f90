@@ -3633,14 +3633,10 @@ subroutine particle_update_BE
       part => first_particle
       do while (associated(part))
       numpart = numpart + 1
+            
+      myradavg = myradavg + part%radius
+      myradmsqr = myradmsqr + part%radius**2
       
-      if (part%radius .ge. 3.5e-6) then
-         myradavg = myradavg + part%radius
-         myradmsqr = myradmsqr + part%radius**2
-      else
-         myradaer = myradaer + part%radius
-      end if
-
      !Want to get droplet statistics only in the interior
      if (part%xp(3) .gt. 0.25*zl .AND. part%xp(3) .lt. 0.75*zl) then
         myradavg_center = myradavg_center + part%radius
@@ -3728,7 +3724,7 @@ subroutine particle_update_BE
          radaeravg = 0.0
       else
          Rep_avg = Rep_avg/tnumpart
-         radavg = radavg/tnumdrop
+         radavg = radavg/tnumpart
          radmsqr = radmsqr/tnumdrop
          radaeravg = radaeravg/tnumaerosol
       end if
