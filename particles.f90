@@ -3206,7 +3206,7 @@ subroutine particle_update_BE
 
 
         part%Tf = 255.0
-        part%qinf = 0.002
+        part%qinf = 0.02
         
         
         if (it .LE. 1) then
