@@ -3120,10 +3120,10 @@ subroutine particle_update_rk3(istage)
       do while (associated(part))
       numpart = numpart + 1
       
-      if (part%radius .gt. part%rc) then
+      !if (part%radius .gt. part%rc) then
          myradavg = myradavg + part%radius
          myradmsqr = myradmsqr + part%radius**2
-      end if
+      !end if
 
      !Want to get droplet statistics only in the interior
      if (part%xp(3) .gt. 0.25*zl .AND. part%xp(3) .lt. 0.75*zl) then
@@ -3210,8 +3210,8 @@ subroutine particle_update_rk3(istage)
          radmsqr = 0.0
       else
          Rep_avg = Rep_avg/tnumpart
-         radavg = radavg/tnumdrop
-         radmsqr = radmsqr/tnumdrop
+         radavg = radavg/tnumpart
+         radmsqr = radmsqr/tnumpart
       end if
       
       if (tnum_destroy.eq.0) then
@@ -3750,10 +3750,10 @@ subroutine particle_update_BE
       do while (associated(part))
       numpart = numpart + 1
       
-      if (part%radius .gt. part%rc) then
+      !if (part%radius .gt. part%rc) then
          myradavg = myradavg + part%radius
          myradmsqr = myradmsqr + part%radius**2
-      end if
+      !end if
 
      !Want to get droplet statistics only in the interior
      if (part%xp(3) .gt. 0.25*zl .AND. part%xp(3) .lt. 0.75*zl) then
@@ -3839,8 +3839,8 @@ subroutine particle_update_BE
          radmsqr = 0.0
       else
          Rep_avg = Rep_avg/tnumpart
-         radavg = radavg/tnumdrop
-         radmsqr = radmsqr/tnumdrop
+         radavg = radavg/tnumpart
+         radmsqr = radmsqr/tnumpart
       end if
       
       if (tnum_destroy.eq.0) then
