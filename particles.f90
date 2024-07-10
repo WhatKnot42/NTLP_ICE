@@ -2758,9 +2758,9 @@ subroutine particle_update_rk3(istage)
 
 
       !First fill extended velocity field for interpolation
-      !t_s = mpi_wtime()
-      call fill_ext 
-      !t_f = mpi_wtime()
+      call start_phase(measurement_id_particle_fill_ext)
+      call fill_ext
+      call end_phase(measurement_id_particle_fill_ext)
       !call mpi_barrier(mpi_comm_world,ierr)
       !if (myid==5) write(*,*) 'time fill_ext:',t_f-t_s
 
@@ -2802,7 +2802,7 @@ subroutine particle_update_rk3(istage)
       !if (myid==5) write(*,*) 'time neighbor:', t_f - t_s
       end if
 
-
+      call start_phase(measurement_id_particle_loop)
       !Loop over the linked list of particles:
       part => first_particle
       do while (associated(part))     
@@ -2897,7 +2897,7 @@ subroutine particle_update_rk3(istage)
 
         part => part%next
       end do
-
+      call end_phase(measurement_id_particle_loop)
 
 
       !t_f1 = mpi_wtime()
@@ -2908,7 +2908,9 @@ subroutine particle_update_rk3(istage)
 
       !Enforce nonperiodic bcs (either elastic or destroying particles)
       !t_s = mpi_wtime()
+      call start_phase(measurement_id_particle_bcs)
       call particle_bcs_nonperiodic
+      call end_phase(measurement_id_particle_bcs)
       !call mpi_barrier(mpi_comm_world,ierr)
       !t_f = mpi_wtime()
       !if (myid==5) write(*,*) 'time bc_non:', t_f - t_s
@@ -2916,7 +2918,9 @@ subroutine particle_update_rk3(istage)
       !Check to see if particles left processor
       !If they did, remove from one list and add to another
       t_s = mpi_wtime()
+      call start_phase(measurement_id_particle_exchange)
       call particle_exchange
+      call end_phase(measurement_id_particle_exchange)
       call mpi_barrier(mpi_comm_world,ierr)
       t_f = mpi_wtime()
       if (myid==5) write(*,*) 'time exchg:', t_f - t_s
@@ -2924,7 +2928,9 @@ subroutine particle_update_rk3(istage)
       !Now enforce periodic bcs 
       !just updates x,y locations if over xl,yl or under 0
       !t_s = mpi_wtime()
+      call start_phase(measurement_id_particle_bcs)
       call particle_bcs_periodic
+      call end_phase(measurement_id_particle_bcs)
       !call mpi_barrier(mpi_comm_world,ierr)
       !t_f = mpi_wtime()
       !if (myid==5) write(*,*) 'time bc_per:', t_f - t_s
@@ -2933,18 +2939,24 @@ subroutine particle_update_rk3(istage)
       !Now that particles are in their updated position, 
       !compute their contribution to the momentum coupling:
       !t_s = mpi_wtime()
-      call particle_coupling_update
+      !call particle_coupling_update
       !call mpi_barrier(mpi_comm_world,ierr)
       !t_f = mpi_wtime()
       !if (myid==5) write(*,*) 'time cpl: ', t_f - t_s
 
+      call start_phase(measurement_id_particle_coupling)
+      call particle_coupling_update
+
       call particle_coupling_exchange
+      call end_phase(measurement_id_particle_coupling)
 
+      call start_phase(measurement_id_particle_stats)
       call particle_stats
+      call end_phase(measurement_id_particle_stats)
 
- 
       !Finally, now that coupling and statistics arrays are filled, 
       !Transpose them back to align with the velocities:
+      call start_phase(measurement_id_particle_ztox)
       call ztox_trans(partsrc_t(0:nnz+1,iys:iye,mxs:mxe,1), &
                      partsrc(1:nnx,iys:iye,izs-1:ize+1,1),nnx,nnz,mxs, &
                      mxe,mx_s,mx_e,iys,iye,izs,ize,iz_s,iz_e,myid, &
@@ -3083,10 +3095,10 @@ subroutine particle_update_rk3(istage)
                      ncpu_s,numprocs)
 
       end if
-
+      call end_phase(measurement_id_particle_ztox)
 
       !t_s = mpi_wtime
-      
+      call start_phase(measurement_id_particle_stats)
       !Get particle count:
       numpart = 0
       numdrop = 0
@@ -3225,7 +3237,8 @@ subroutine particle_update_rk3(istage)
 
       call mpi_allreduce(myqmin,qmin,1,mpi_real8,mpi_min,mpi_comm_world,ierr)
       call mpi_allreduce(myqmax,qmax,1,mpi_real8,mpi_min,mpi_comm_world,ierr)
-
+      
+      call end_phase(measurement_id_particle_stats)
       
 
 end subroutine particle_update_rk3
@@ -3543,8 +3556,7 @@ subroutine particle_update_BE
       part => part%next
       end do
       call end_phase(measurement_id_particle_loop)
-	   !ICE HERE?
-
+	   
       !Enforce nonperiodic bcs (either elastic or destroying particles)
       call start_phase(measurement_id_particle_bcs)
       call particle_bcs_nonperiodic
