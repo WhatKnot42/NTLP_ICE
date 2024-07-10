@@ -2821,6 +2821,9 @@ subroutine particle_update_rk3(istage)
          else
              rhoa = surf_rho
          end if
+
+         part%Tf = 262
+         part%qinf = 0.002
            
 
 
@@ -2830,6 +2833,8 @@ subroutine particle_update_rk3(istage)
             part%vp(1:3) = part%uf
             part%Tp = part%Tf
          endif
+
+         part%vp = 0.0
 
          !Now advance the particle and position via RK3 (same as velocity)
         
