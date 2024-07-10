@@ -12,7 +12,7 @@ max_time = 1.0e9  !Code will stop at the next itape after this time (in seconds)
 &flags
 ismlt = 0, ifree=0, iradup=0, iupwnd=1
 ibuoy = 1, ifilt=0, itcut=1, isubs=0, ibrcl=0, iocean=0
-method = 3, idebug=1, ivis0=1, ifix_dt=0, new_vis=-1
+method = 3, idebug=1, ivis0=1, ifix_dt=1, new_vis=-1
 isfc = 1, 1  ! isfc = 0 sets surface flux (qstar), isfc = 1 sets surface condition (Dirichlet through tsfcc)
 iz_space = 1, ! 0 = uniform dz, 1 = top/bottom mirror stretched ("channel"), 2 = "open channel", 3 = PBL with stretching at surface and at zi
 iDNS = 1
@@ -46,7 +46,7 @@ ncpu_s = 8
 
 !Time step
 cfl = 0.5
-dt_new = 0.05
+dt_new = 0.0001
 
 !Use for DNS:
 Uo = 0.0  !Sets the magnitude of the top and bottom plate velocities (Couette flow -- assumes equal and opposite)
