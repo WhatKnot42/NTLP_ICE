@@ -2859,7 +2859,6 @@ subroutine particle_update_rk3(istage)
          Nup = 2.0 + 0.6*Rep**(1.0/2.0)*Pra**(1.0/3.0)
          Shp = 2.0 + 0.6*Rep**(1.0/2.0)*Sc**(1.0/3.0)
 
-         (Mw/(Ru*Tnext*rhoa)) * esa * exp(((Lv*Mw/Ru)*((1./part%Tf) - (1./Tnext))) + ((2.*Mw*Gam)/(Ru*rhow*rnext*Tnext)) - ((part%kappa_s*part%m_s*rhow/rhos)/(Volp*rhop-part%m_s)))
          !Mass Transfer calculations
          einf = mod_magnus(part%Tf)
          Eff_C = (2.0*Mw*Gam)/(Ru*rhow*part%radius*part%Tp)
