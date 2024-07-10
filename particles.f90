@@ -2740,10 +2740,10 @@ subroutine particle_update_rk3(istage)
       include 'mpif.h'
 
       integer :: istage,ierr
-      integer :: numdrop_center
-      integer :: intbuf(10),intebuf_rec(10)
+      integer :: numdrop_center,tnumdrop_center
+      integer :: intbuf(10),intbuf_rec(10)
       real :: tmpbuf(9),tmpbuf_rec(9)
-      real :: myradavg,myradmsq,myradavg_center,myradmsq_center
+      real :: myradavg,myradmsqr,myradavg_center,myradmsqr_center
       real :: myradmin,myradmax,mytempmin,mytempmax,myqmin,myqmax
       real :: pi
       real :: denom,dtl,sigma
