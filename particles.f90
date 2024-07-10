@@ -3336,10 +3336,14 @@ subroutine particle_update_BE
            call uf_interp       !Use 6th order Lagrange interpolation
         end if
 
+        part%Tf = 262
+        part%qinf = 0.002
 
         if (it .LE. 1) then
            part%vp(1:3) = part%uf
         end if
+
+        part%vp = 0.0
 
         if (iexner .eq. 1) then
            !Compute using the base-state pressure at the particle height
