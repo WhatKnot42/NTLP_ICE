@@ -3080,38 +3080,147 @@ subroutine particle_update_rk3(istage)
 
 
       !t_s = mpi_wtime
+      call start_phase(measurement_id_particle_stats)
       !Get particle count:
       numpart = 0
+      numdrop = 0
+      numdrop_center = 0
+      numaerosol = 0
+
+      myradavg = 0.0
+      myradmsqr = 0.0
+      myradavg_center = 0.0
+      myradmsqr_center = 0.0
+      myradmin=1000.0
+      myradmax = 0.0
+      mytempmin = 1000.0
+      mytempmax = 0.0
+      myqmin = 1000.0
+      myqmax = 0.0
+
       part => first_particle
       do while (associated(part))
       numpart = numpart + 1
+      
+      if (part%radius .gt. part%rc) then
+         myradavg = myradavg + part%radius
+         myradmsqr = myradmsqr + part%radius**2
+      end if
+
+     !Want to get droplet statistics only in the interior
+     if (part%xp(3) .gt. 0.25*zl .AND. part%xp(3) .lt. 0.75*zl) then
+        myradavg_center = myradavg_center + part%radius
+        myradmsqr_center = myradmsqr_center + part%radius**2
+        numdrop_center = numdrop_center + 1
+     end if
+
+      if (part%radius .gt. part%rc) then
+         numdrop = numdrop + 1
+      else
+         numaerosol = numaerosol + 1
+      end if
+
+      if (part%radius .gt. myradmax) myradmax = part%radius
+      if (part%radius .lt. myradmin) myradmin = part%radius
+      if (part%Tp .gt. mytempmax) mytempmax = part%Tp
+      if (part%Tp .lt. mytempmin) mytempmin = part%Tp
+      if (part%qstar .gt. myqmax) myqmax = part%qinf
+      if (part%qstar .lt. myqmin) myqmin = part%qinf
+
       part => part%next
       end do
-      !call mpi_barrier(mpi_comm_world,ierr)
-      !t_f = mpi_wtime()
-      !if (myid==5) write(*,*) 'time numpart: ', t_f - t_s
- 
-      !t_s = mpi_wtime()
-      !Compute total number of particles
-      call mpi_allreduce(numpart,tnumpart,1,mpi_integer,mpi_sum,mpi_comm_world,ierr)
-      !Compute average particle Reynolds number
-      call mpi_allreduce(myRep_avg,Rep_avg,1,mpi_real8,mpi_sum,mpi_comm_world,ierr)
 
-      Rep_avg = Rep_avg/tnumpart
 
-      call mpi_allreduce(mylwc_sum,lwc,1,mpi_real8,mpi_sum,mpi_comm_world,ierr)
+      !Compute sums of integer quantities
+      intbuf(1) = numpart
+      intbuf(2) = numdrop
+      intbuf(3) = numaerosol
+      intbuf(4) = denum
+      intbuf(5) = actnum
+      intbuf(6) = num_destroy
+      intbuf(7) = num100
+      intbuf(8) = num1000
+      intbuf(9) = numimpos
+      intbuf(10) = numdrop_center
 
-      call mpi_allreduce(myphiw_sum,phiw,1,mpi_real8,mpi_sum,mpi_comm_world,ierr)
+      call mpi_allreduce(intbuf,intbuf_rec,10,mpi_integer,mpi_sum,mpi_comm_world,ierr)
 
-      call mpi_allreduce(myphiv_sum,phiv,1,mpi_real8,mpi_sum,mpi_comm_world,ierr)
+      tnumpart = intbuf_rec(1)
+      tnumdrop = intbuf_rec(2)
+      tnumaerosol = intbuf_rec(3)
+      tdenum = intbuf_rec(4)
+      tactnum = intbuf_rec(5)
+      tnum_destroy = intbuf_rec(6)
+      tnum100 = intbuf_rec(7)
+      tnum1000 = intbuf_rec(8)
+      tnumimpos = intbuf_rec(9)
+      tnumdrop_center = intbuf_rec(10)
 
       
+      !Compute sums of real quantities
+
+      tmpbuf(1) = myRep_avg
+      tmpbuf(2) = mylwc_sum
+      tmpbuf(3) = myphiw_sum
+      tmpbuf(4) = myphiv_sum
+      tmpbuf(5) = myradavg
+      tmpbuf(6) = myradmsqr
+      tmpbuf(7) = avgres
+      tmpbuf(8) = myradavg_center
+      tmpbuf(9) = myradmsqr_center
+
+      call mpi_allreduce(tmpbuf,tmpbuf_rec,9,mpi_real8,mpi_sum,mpi_comm_world,ierr)
+
+      Rep_avg = tmpbuf_rec(1)
+      lwc = tmpbuf_rec(2)
+      phiw = tmpbuf_rec(3)
+      phiv = tmpbuf_rec(4)
+      radavg = tmpbuf_rec(5)
+      radmsqr = tmpbuf_rec(6)
+      tavgres = tmpbuf_rec(7)
+      radavg_center = tmpbuf_rec(8)
+      radmsqr_center = tmpbuf_rec(9)
+
+
+
       phiw = phiw/xl/yl/zl/surf_rho  !This is only an approximation when considering base-state rho(z)
       phiv = phiv/xl/yl/zl
+      
+      if (tnumpart.eq.0) then
+         Rep_avg = 0.0
+         radavg = 0.0
+         radmsqr = 0.0
+      else
+         Rep_avg = Rep_avg/tnumpart
+         radavg = radavg/tnumdrop
+         radmsqr = radmsqr/tnumdrop
+      end if
+      
+      if (tnum_destroy.eq.0) then
+         tavgres = 0.0
+      else
+         tavgres = tavgres/tnum_destroy
+      end if
+ 
+      if (tnumdrop_center.eq.0) then
+         radavg_center = 0.0
+         radmsqr_center = 0.0
+      else
+         radavg_center = radavg_center/tnumdrop_center
+         radmsqr_center = radmsqr_center/tnumdrop_center
+      end if
 
-      !call mpi_barrier(mpi_comm_world,ierr)
-      !t_f = mpi_wtime()
-      !if (myid==5) write(*,*) 'time mpi_allreduce: ', t_f - t_s
+      !Min and max radius
+      call mpi_allreduce(myradmin,radmin,1,mpi_real8,mpi_min,mpi_comm_world,ierr)
+      call mpi_allreduce(myradmax,radmax,1,mpi_real8,mpi_max,mpi_comm_world,ierr)
+
+      call mpi_allreduce(mytempmin,tempmin,1,mpi_real8,mpi_min,mpi_comm_world,ierr)
+      call mpi_allreduce(mytempmax,tempmax,1,mpi_real8,mpi_max,mpi_comm_world,ierr)
+
+      call mpi_allreduce(myqmin,qmin,1,mpi_real8,mpi_min,mpi_comm_world,ierr)
+      call mpi_allreduce(myqmax,qmax,1,mpi_real8,mpi_min,mpi_comm_world,ierr)
+
+      call end_phase(measurement_id_particle_stats)
 
 end subroutine particle_update_rk3
 
