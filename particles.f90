@@ -2735,10 +2735,16 @@ subroutine particle_update_rk3(istage)
       use pars
       use con_data
       use con_stats
+      use profiling
       implicit none
       include 'mpif.h'
 
       integer :: istage,ierr
+      integer :: numdrop_center
+      integer :: intbuf(10),intebuf_rec(10)
+      real :: tmpbuf(9),tmpbuf_rec(9)
+      real :: myradavg,myradmsq,myradavg_center,myradmsq_center
+      real :: myradmin,myradmax,mytempmin,mytempmax,myqmin,myqmax
       real :: pi
       real :: denom,dtl,sigma
       integer :: ix,iy,iz
@@ -3080,7 +3086,7 @@ subroutine particle_update_rk3(istage)
 
 
       !t_s = mpi_wtime
-      call start_phase(measurement_id_particle_stats)
+      
       !Get particle count:
       numpart = 0
       numdrop = 0
@@ -3220,7 +3226,7 @@ subroutine particle_update_rk3(istage)
       call mpi_allreduce(myqmin,qmin,1,mpi_real8,mpi_min,mpi_comm_world,ierr)
       call mpi_allreduce(myqmax,qmax,1,mpi_real8,mpi_min,mpi_comm_world,ierr)
 
-      call end_phase(measurement_id_particle_stats)
+      
 
 end subroutine particle_update_rk3
 
