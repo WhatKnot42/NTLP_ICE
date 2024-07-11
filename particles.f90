@@ -2883,8 +2883,9 @@ subroutine particle_update_rk3(istage)
          end if
 
 
-         part%Tprhs_s = -Nup/3.0/Pra*CpaCpp*rhop/rhow*taup_i*(part%Tp-part%Tf)
-         part%Tprhs_L = 3.0*Lv/Cpp/part%radius*part%radrhs
+         
+         part%Tprhs_s = ((-Nup*CpaCpp*rhop)/(3.0*Pra*rhow*taup_i))*(part%Tp-part%Tf)
+         part%Tprhs_L = ((3.0*Lv)/(Cpp*part%radius))*part%radrhs
 
 
 
