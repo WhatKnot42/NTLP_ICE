@@ -2876,8 +2876,8 @@ subroutine particle_update_rk3(istage)
          part%xrhs(1:3) = part%vp(1:3)
          part%vrhs(1:3) = corrfac*taup_i*(part%uf(1:3)-part%vp(1:3)) + part_grav(1:3)
 
-         if (ievap .EQ. 1) then      
-            part%radrhs = Shp/9.0/Sc*rhop/rhow*part%radius*taup_i*(part%qinf-part%qstar) !assumes qinf=rhov/rhoa rather than rhov/rhom
+         if (ievap .EQ. 1) then
+            part%radrhs = ((Shp*rhop*part%radius)/(Sc*rhow*taup_i))*(part%qinf-part%qstar) !assumes qinf=rhov/rhoa rather than rhov/rhom
          else
             part%radrhs = 0.0
          end if
