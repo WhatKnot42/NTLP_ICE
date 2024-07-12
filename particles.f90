@@ -2883,7 +2883,7 @@ subroutine particle_update_rk3(istage)
             !Si = ev/esi
             !Dprime = ((0.015*part%Tp) - 1.9) * 1e-5
             !Kprime = (1.5e-11 * part%Tp**3) - (4.8e-8 * part%Tp**2) + (1e-4 * part%Tp) - 3.9e-4
-            !mdot = (4*pi*part%radius*(Si - 1)) / ((((Ls/(467.0*part%Tp))-1)*(Ls/(Kprime*part%Tp))) + (467.0/(mod_ice(part%Tp)*Dprime)))
+            !mdot = (4*pi*part%radius*(Si - 1)) / ((((Lv/(467.0*part%Tp))-1)*(Lv/(Kprime*part%Tp))) + (467.0/(mod_ice(part%Tp)*Dprime)))
             !Vdot = mdot / rhop
             !part%radrhs = Vdot / ((4.0/3.0)*pi*part%radius**2)
             part%radrhs = ((Shp*rhop*part%radius)/(9.0*Sc*rhow*taup_i))*(part%qinf-part%qstar) !assumes qinf=rhov/rhoa rather than rhov/rhom
@@ -2895,8 +2895,8 @@ subroutine particle_update_rk3(istage)
          
          part%Tprhs_s = ((-Nup*CpaCpp*rhop)/(3.0*Pra*rhow*taup_i))*(part%Tp-part%Tf)
          part%Tprhs_L = ((3.0*Lv)/(Cpp*part%radius))*part%radrhs
-         !part%Tprhs_s = ((-3.0*Nup*Cpa*nuf*rhoa)/(2.*Pra*Cpp*rhop*(rnext**2)))*(Tnext-part%Tf)
-         !part%Tprhs_l = 3.0*Lv*(1.0/(rnext*Cpp))*rprime*(part%radius/taup0)
+         !part%Tprhs_s = ((-3.0*Nup*Cpa*nuf*rhoa)/(2.*Pra*Cpp*rhop*(part%radius**2)))*(part%Tp-part%Tf)
+         !part%Tprhs_l = 3.0*Lv*(1.0/(part%radius*Cpp))*part%radrhs
 
 
   
