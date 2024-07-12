@@ -2755,7 +2755,7 @@ subroutine particle_update_rk3(istage)
       real :: mylwc_sum,myphiw_sum,myphiv_sum,Volp      
       real :: Eff_C,Eff_S
       real :: t_s,t_f,t_s1,t_f1
-      real :: mod_magnus,exner,func_p_base,rhoa,func_rho_base
+      real :: mod_magnus,exner,func_p_base,rhoa,func_rho_base,mod_ice
 
 
       !First fill extended velocity field for interpolation
