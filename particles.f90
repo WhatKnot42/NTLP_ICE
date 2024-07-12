@@ -2746,6 +2746,7 @@ subroutine particle_update_rk3(istage)
       real :: myradavg,myradmsqr,myradavg_center,myradmsqr_center
       real :: myradmin,myradmax,mytempmin,mytempmax,myqmin,myqmax
       real :: pi
+      real :: mdot,Vdot,Si,esi,ev,Kprime,Dprime
       real :: denom,dtl,sigma
       integer :: ix,iy,iz
       real :: Rep,diff(3),diffnorm,corrfac,myRep_avg
@@ -2877,7 +2878,15 @@ subroutine particle_update_rk3(istage)
          part%vrhs(1:3) = corrfac*taup_i*(part%uf(1:3)-part%vp(1:3)) + part_grav(1:3)
 
          if (ievap .EQ. 1) then
-            part%radrhs = ((Shp*rhop*part%radius)/(Sc*rhow*taup_i))*(part%qinf-part%qstar) !assumes qinf=rhov/rhoa rather than rhov/rhom
+            !ev = (part%qinf*rhoa*part%Tf*Ru)/Mw
+            !esi = mod_ice(part%Tf)
+            !Si = ev/esi
+            !Dprime = ((0.015*part%Tp) - 1.9) * 1e-5
+            !Kprime = (1.5e-11 * part%Tp**3) - (4.8e-8 * part%Tp**2) + (1e-4 * part%Tp) - 3.9e-4
+            !mdot = (4*pi*part%radius*(Si - 1)) / ((((Ls/(467.0*part%Tp))-1)*(Ls/(Kprime*part%Tp))) + (467.0/(mod_ice(part%Tp)*Dprime)))
+            !Vdot = mdot / rhop
+            !part%radrhs = Vdot / ((4.0/3.0)*pi*part%radius**2)
+            part%radrhs = ((Shp*rhop*part%radius)/(9.0*Sc*rhow*taup_i))*(part%qinf-part%qstar) !assumes qinf=rhov/rhoa rather than rhov/rhom
          else
             part%radrhs = 0.0
          end if
