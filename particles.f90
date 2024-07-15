@@ -2825,6 +2825,7 @@ subroutine particle_update_rk3(istage)
 
          part%Tf = 262
          part%qinf = 0.002
+         part%m_s = 1e-12
            
 
 
