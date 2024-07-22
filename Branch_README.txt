@@ -1,0 +1,1 @@
+The master branch includes the recalculated Swall, mod_ice, and initial conditions to reflect the simulation case
