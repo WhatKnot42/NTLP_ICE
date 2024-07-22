@@ -20,7 +20,7 @@ homedir=~/NTLP/test_cases/$case
 mkdir -p $datadir/particle_traj
 
 # copy the pi chamber's restart file into the data directory.
-cp -f /scratch365/broper/pi_chamber_spin_up/u.le.cou002 $datadir/u.le.cou000
+cp -f $group_storage/test_cases/$case/u.le.cou000 $datadir/u.le.cou000
 
 cd $homedir
 
